@@ -136,7 +136,7 @@ const AbastecimentosList = () => {
       reset({
         ...editando,
         data: editando.data
-          ? new Date(editando.data).toISOString().slice(0, 10)
+          ? formatData(editando.data)
           : "",
       });
     } else {
@@ -239,182 +239,97 @@ const AbastecimentosList = () => {
       </button>
 
       <Modal
-        isOpen={mostrarForm}
-        onClose={fecharModal}
-        title={`${tituloForm} Abastecimento`}
-      >
-        <Form
-          onSubmit={handleSubmit(onSubmit)}
-          style={{ padding: 0, border: "none", maxWidth: "100%" }}
-        >
-          {/* Placa (select) */}
-          <FormField
-            label="Placa"
-            name="placa"
-            as="select"
-            register={register}
-            error={errors.placa}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          >
-            <option value="">Selecione a placa</option>
-            {veiculos.map((v) => (
-              <option key={v.id} value={v.placa}>
-                {v.placa} - {v.modelo}
-              </option>
-            ))}
-          </FormField>
+  isOpen={mostrarForm}
+  onClose={fecharModal}
+  title={`${tituloForm} Abastecimento`}
+>
+  <Form onSubmit={handleSubmit(onSubmit)}>
+    <FormField
+      label="Placa"
+      name="placa"
+      as="select"
+      register={register}
+      error={errors.placa}
+    >
+      <option value="">Selecione a placa</option>
+      {veiculos.map((v) => (
+        <option key={v.id} value={v.placa}>
+          {v.placa} - {v.modelo}
+        </option>
+      ))}
+    </FormField>
 
-          {/* Motorista (select) */}
-          <FormField
-            label="Motorista"
-            name="motorista"
-            as="select"
-            register={register}
-            error={errors.motorista}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          >
-            <option value="">Selecione o motorista</option>
-            {motoristas.map((m) => (
-              <option key={m.id} value={m.nome}>
-                {m.nome}
-              </option>
-            ))}
-          </FormField>
+    <FormField
+      label="Motorista"
+      name="motorista"
+      as="select"
+      register={register}
+      error={errors.motorista}
+    >
+      <option value="">Selecione o motorista</option>
+      {motoristas.map((m) => (
+        <option key={m.id} value={m.nome}>
+          {m.nome}
+        </option>
+      ))}
+    </FormField>
 
-          {/* Fornecedor (select) */}
-          <FormField
-            label="Fornecedor"
-            name="fornecedor"
-            as="select"
-            register={register}
-            error={errors.fornecedor}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          >
-            <option value="">Selecione o fornecedor</option>
-            {fornecedores.map((f) => (
-              <option key={f.id} value={f.nome}>
-                {f.nome}
-              </option>
-            ))}
-          </FormField>
+    <FormField
+      label="Fornecedor"
+      name="fornecedor"
+      as="select"
+      register={register}
+      error={errors.fornecedor}
+    >
+      <option value="">Selecione o fornecedor</option>
+      {fornecedores.map((f) => (
+        <option key={f.id} value={f.nome}>
+          {f.nome}
+        </option>
+      ))}
+    </FormField>
 
-          {/* KM */}
-          <FormField
-            label="KM"
-            name="km"
-            type="number"
-            register={register}
-            error={errors.km}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          />
+    <FormField
+      label="KM"
+      name="km"
+      type="number"
+      register={register}
+      error={errors.km}
+    />
 
-          {/* Data */}
-          <FormField
-            label="Data"
-            name="data"
-            type="date"
-            register={register}
-            error={errors.data}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          />
+    <FormField
+      label="Data"
+      name="data"
+      type="date"
+      register={register}
+      error={errors.data}
+    />
 
-          {/* Litros */}
-          <FormField
-            label="Litros"
-            name="litros"
-            type="number"
-            step="0.01"
-            register={register}
-            error={errors.litros}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          />
+    <FormField
+      label="Litros"
+      name="litros"
+      type="number"
+      step="0.01"
+      register={register}
+      error={errors.litros}
+    />
 
-          {/* Valor litro */}
-          <FormField
-            label="Valor do Litro"
-            name="valorLitro"
-            type="number"
-            step="0.01"
-            register={register}
-            error={errors.valorLitro}
-            inputStyle={{
-              width: "100%",
-              maxWidth: "400px",
-              boxSizing: "border-box",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              height: "38px",
-              marginBottom: "12px",
-            }}
-          />
+    <FormField
+      label="Valor do Litro"
+      name="valorLitro"
+      type="number"
+      step="0.01"
+      register={register}
+      error={errors.valorLitro}
+    />
 
-          <SubmitButton loading={isSubmitting}>
-            {editando ? "Atualizar" : "Cadastrar"}
-          </SubmitButton>
-        </Form>
-      </Modal>
+    <div style={{ width: "100%" }}>
+      <SubmitButton loading={isSubmitting}>
+        {editando ? "Atualizar" : "Cadastrar"}
+      </SubmitButton>
+    </div>
+  </Form>
+</Modal>
 
       <SearchInput
         value={busca}

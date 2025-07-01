@@ -12,16 +12,36 @@ import {
 export const useViagens = () => {
   const [viagens, setViagens] = useState([]);
 
-  const fetchViagens = async () => {
+ const fetchViagens = async () => {
+  try {
     const snap = await getDocs(collection(db, "viagens"));
-    const list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setViagens(list);
-  };
+    const list = snap.docs.map(doc => {
+      const data = doc.data();
 
-  const adicionarViagem = async (dados) => {
-    await addDoc(collection(db, "viagens"), dados);
-    fetchViagens();
-  };
+      return {
+        id: doc.id,
+        placa: data.placa ?? "",
+        motorista: data.motorista ?? "",
+        destino: data.destino ?? "",
+        km: data.km ?? 0,
+        dataInicio: data.dataInicio ?? "",
+        dataFim: data.dataFim ?? "",
+        // outros campos que usar
+      };
+    });
+
+    setViagens(list);
+  } catch (error) {
+    console.error("Erro ao buscar viagens:", error);
+    setViagens([]);
+  }
+};
+
+
+ const adicionarViagem = async (dados) => {
+  await addDoc(collection(db, "viagens"), dados);
+  await fetchViagens();
+};
 
   const editarViagem = async (id, dados) => {
     await updateDoc(doc(db, "viagens", id), dados);

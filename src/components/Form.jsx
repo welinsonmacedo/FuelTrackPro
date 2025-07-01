@@ -1,16 +1,15 @@
-import React from 'react';
-
-export const Form = ({ children, onSubmit, style }) => {
+// components/Form.jsx
+export const Form = ({ children, ...props }) => {
   return (
     <form
-      onSubmit={onSubmit}
+      {...props}
       style={{
-        maxWidth: '400px',
-        padding: '10px',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        backgroundColor: '#fff',
-        ...style,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "10px",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        ...props.style,
       }}
     >
       {children}

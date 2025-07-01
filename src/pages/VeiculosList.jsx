@@ -13,8 +13,7 @@ import { Form } from "../components/Form";
 import { Modal } from "../components/Modal";
 
 const VeiculosList = () => {
-  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } =
-    useVeiculos();
+  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } = useVeiculos();
   const { log } = useAuditoria();
 
   const [busca, setBusca] = useState("");
@@ -97,14 +96,12 @@ const VeiculosList = () => {
   };
 
   const handleEdit = (item) => {
-    console.log("Editar:", item); // DEBUG: verifique dados do veículo ao editar
     setEditando(item);
     setTituloForm("Editar");
     setMostrarForm(true);
   };
 
   const handleConfirmDelete = async () => {
-    console.log("Deletando veículo com id:", confirmarId);
     const dadosAntes = veiculos.find((v) => v.id === confirmarId);
     await excluirVeiculo(confirmarId);
     await log(
@@ -116,6 +113,20 @@ const VeiculosList = () => {
       "VeiculosList"
     );
     setConfirmarId(null);
+  };
+
+  // Estilo para inputs lado a lado no modal
+  const linhaInputsStyle = {
+    display: "flex",
+    gap: "15px",
+    flexWrap: "wrap",
+    marginBottom: "15px",
+  };
+
+  // Estilo individual dos inputs para que fiquem lado a lado
+  const inputLadoALado = {
+    flex: "1 1 200px",
+    minWidth: "200px",
   };
 
   return (
@@ -150,51 +161,95 @@ const VeiculosList = () => {
         Cadastrar Veículo
       </button>
 
-      <Modal
-        isOpen={mostrarForm}
-        onClose={fecharModal}
-        title={`${tituloForm} Veículo`}
-      >
-        <Form
-          onSubmit={handleSubmit(onSubmit)}
-          style={{ padding: 0, border: "none", maxWidth: "100%" }}
-        >
-          {[
-            "placa",
-            "marca",
-            "modelo",
-            "ano",
-            "tipo",
-            "chassi",
-            "renavam",
-            "cor",
-            "filial",
-            "capacidadeTanque",
-          ].map((campo) => (
+      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Veículo`}>
+        <Form onSubmit={handleSubmit(onSubmit)} style={{ padding: 0, border: "none" }}>
+          <div style={linhaInputsStyle}>
             <FormField
-              key={campo}
-              placeholder={
-                campo === "capacidadeTanque"
-                  ? "Capacidade Tanque (L)"
-                  : campo.charAt(0).toUpperCase() + campo.slice(1)
-              }
-              name={campo}
-              type={campo === "ano" || campo === "capacidadeTanque" ? "number" : "text"}
+              label="Placa"
+              name="placa"
               register={register}
-              error={errors[campo]}
-              inputStyle={{
-                width: "100%",
-                maxWidth: "400px",
-                boxSizing: "border-box",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                height: "38px",
-                marginBottom: "12px",
-              }}
+              error={errors.placa}
+              inputStyle={inputLadoALado}
             />
-          ))}
+            <FormField
+              label="Marca"
+              name="marca"
+              register={register}
+              error={errors.marca}
+              inputStyle={inputLadoALado}
+            />
+          </div>
+
+          <div style={linhaInputsStyle}>
+            <FormField
+              label="Modelo"
+              name="modelo"
+              register={register}
+              error={errors.modelo}
+              inputStyle={inputLadoALado}
+            />
+            <FormField
+              label="Ano"
+              name="ano"
+              type="number"
+              register={register}
+              error={errors.ano}
+              inputStyle={inputLadoALado}
+            />
+          </div>
+
+          <div style={linhaInputsStyle}>
+            <FormField
+              label="Tipo"
+              name="tipo"
+              register={register}
+              error={errors.tipo}
+              inputStyle={inputLadoALado}
+            />
+            <FormField
+              label="Chassi"
+              name="chassi"
+              register={register}
+              error={errors.chassi}
+              inputStyle={inputLadoALado}
+            />
+          </div>
+
+          <div style={linhaInputsStyle}>
+            <FormField
+              label="Renavam"
+              name="renavam"
+              register={register}
+              error={errors.renavam}
+              inputStyle={inputLadoALado}
+            />
+            <FormField
+              label="Cor"
+              name="cor"
+              register={register}
+              error={errors.cor}
+              inputStyle={inputLadoALado}
+            />
+          </div>
+
+          <div style={linhaInputsStyle}>
+            <FormField
+              label="Filial"
+              name="filial"
+              register={register}
+              error={errors.filial}
+              inputStyle={inputLadoALado}
+            />
+            <FormField
+              label="Capacidade Tanque (L)"
+              name="capacidadeTanque"
+              type="number"
+              register={register}
+              error={errors.capacidadeTanque}
+              inputStyle={inputLadoALado}
+            />
+          </div>
+
           <SubmitButton loading={isSubmitting}>
             {editando ? "Atualizar" : "Cadastrar"}
           </SubmitButton>
@@ -221,12 +276,9 @@ const VeiculosList = () => {
           <ListItem
             key={v.id}
             title={`${v.placa} - ${v.modelo || ""}`}
-            subtitle={`Marca: ${v.marca || "-"} | Tipo: ${v.tipo || "-"} | Capacidade Tanque: ${v.capacidadeTanque || "-" } L`}
+            subtitle={`Marca: ${v.marca || "-"} | Tipo: ${v.tipo || "-"} | Capacidade Tanque: ${v.capacidadeTanque || "-"} L`}
             onEdit={() => handleEdit(v)}
-            onDelete={() => {
-              console.log("Excluir clicado, id:", v.id);
-              setConfirmarId(v.id);
-            }}
+            onDelete={() => setConfirmarId(v.id)}
             style={{ marginBottom: "12px" }}
           />
         ))}

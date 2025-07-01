@@ -14,6 +14,7 @@ import FornecedoresList from "./pages/FornecedoresList";
 import AbastecimentosList from "./pages/AbastecimentosList";
 import TiposManutencaoList from "./pages/TiposManutencaoList";
 import Notificacoes from "./pages/Notificacoes";
+import ViagensList from "./pages/ViagensList";
 
 export default function App() {
   return (
@@ -42,7 +43,7 @@ export default function App() {
              <Route path="tipos-manutencoes" element={<TiposManutencaoList/>} />
               <Route path="fornecedores" element={<FornecedoresList/>} />
               <Route path="notificacoes" element={<Notificacoes/>} />
-              
+              <Route path="viagens" element={<ViagensList/>} />
            
             </Route>
           </Routes>

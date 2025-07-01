@@ -65,13 +65,15 @@ export default function Layout() {
 const menuItems = [
   { to: "/dashboard", icon: "📊", label: "Dashboard" },
   { to: "/motoristas", icon: "🚚", label: "Motoristas" },
-  { to: "/", icon: "🛣️", label: "Viagens" },
+
   { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" },
   { to: "/veiculos", icon: "🚛", label: "Veículos" },
   { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },
     { to: "/tipos-manutencoes", icon: "🛠️", label: "Tipos Manutenções" },
   { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },
+    { to: "/viagens", icon: "🏢", label: "Viagens" },
    { to: "/notificacoes", icon: "🏢", label: "Notificações" },
+ 
 ];
 
 

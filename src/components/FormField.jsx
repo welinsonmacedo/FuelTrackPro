@@ -9,15 +9,15 @@ export const FormField = ({
   ...rest
 }) => {
   const commonStyle = {
-    padding: "8px",
-    width: "100%",
-    boxSizing: "border-box",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    fontSize: "14px",
-    height: "38px",
-    marginBottom:'15px'
-  };
+  padding: "8px",
+  width: "100%",
+  boxSizing: "border-box",
+  borderRadius: "4px",
+  border: "1px solid #ccc",
+  fontSize: "14px",
+  height: "38px",
+};
+
 
   return (
     <div style={{ minWidth: "300px" }}>

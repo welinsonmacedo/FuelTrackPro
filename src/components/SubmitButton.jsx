@@ -16,7 +16,8 @@ export const SubmitButton = ({ children, loading }) => (
       cursor: loading ? 'not-allowed' : 'pointer',
       transition: 'background-color 0.3s ease',
       boxSizing: 'border-box',
-      marginTop:'10px'
+      marginTop: '10px',
+      textAlign: 'center', // <-- Centraliza o texto
     }}
   >
     {loading ? 'Enviando...' : children}
