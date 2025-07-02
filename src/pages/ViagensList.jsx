@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { viagensSchema } from "../schemas/viagemSchema"; // seu schema Yup para viagens
-import { useViagens } from "../hooks/useViagens"; // seu hook custom para viagens
-import { useAbastecimentos } from "../hooks/useAbastecimentos"; // seu hook custom para abastecimentos
+import { viagensSchema } from "../schemas/viagemSchema";
+import { useViagens } from "../hooks/useViagens";
+import { useAbastecimentos } from "../hooks/useAbastecimentos";
 import { useRotas } from "../hooks/useRotas";
 import { FormField } from "../components/FormField";
 import { Modal } from "../components/Modal";
@@ -12,6 +12,9 @@ import { SubmitButton } from "../components/SubmitButton";
 import { ListItem } from "../components/ListItem";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatData } from "../utils/data";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../services/firebase";
+import { SearchInput } from "../components/SearchInput";
 
 const ViagensList = () => {
   const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
@@ -23,87 +26,38 @@ const ViagensList = () => {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
+  const [viagemParaVincular, setViagemParaVincular] = useState(null);
 
+  // Filtro das viagens conforme busca
   const filtrados = viagens.filter((v) => {
     const buscaLower = busca.toLowerCase();
-
     const placa = typeof v.placa === "string" ? v.placa.toLowerCase() : "";
     const motorista = typeof v.motorista === "string" ? v.motorista.toLowerCase() : "";
     const destino = typeof v.destino === "string" ? v.destino.toLowerCase() : "";
-
-    return (
-      placa.includes(buscaLower) ||
-      motorista.includes(buscaLower) ||
-      destino.includes(buscaLower)
-    );
+    return placa.includes(buscaLower) || motorista.includes(buscaLower) || destino.includes(buscaLower);
   });
 
+  // React Hook Form
   const {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: yupResolver(viagensSchema),
-  });
+  } = useForm({ resolver: yupResolver(viagensSchema) });
 
-  // Campos observados para filtro de abastecimentos vinculáveis
-  const watchedPlaca = watch("placa");
-  const watchedMotorista = watch("motorista");
-  const watchedDataInicio = watch("dataInicio");
-  const watchedDataFim = watch("dataFim");
-  const watchedDestino = watch("rota"); // no seu FormField o nome do campo é "rota"
-
-  // Filtra abastecimentos para vincular com base nos dados do formulário
-  const abastecimentosParaVincular = useMemo(() => {
-    if (
-      !watchedPlaca ||
-      !watchedMotorista ||
-      !watchedDataInicio ||
-      !watchedDataFim ||
-      !watchedDestino
-    )
-      return [];
-    const dtInicio = new Date(watchedDataInicio);
-    const dtFim = new Date(watchedDataFim);
-
-    return abastecimentos.filter((ab) => {
-      const dataAbastecimento = new Date(ab.data);
-      return (
-        ab.placa === watchedPlaca &&
-        ab.motorista === watchedMotorista &&
-        (ab.destino === watchedDestino || ab.rota === watchedDestino) &&
-        dataAbastecimento >= dtInicio &&
-        dataAbastecimento <= dtFim
-      );
-    });
-  }, [
-    abastecimentos,
-    watchedPlaca,
-    watchedMotorista,
-    watchedDataInicio,
-    watchedDataFim,
-    watchedDestino,
-  ]);
-
-  // Listas únicas para selects
+  // Listas únicas para selects (placas e motoristas)
   const placasDisponiveis = [
     ...new Set(
-      abastecimentos
-        .map((ab) => ab.placa)
-        .filter((p) => typeof p === "string" && p.trim() !== "")
+      abastecimentos.map((ab) => ab.placa).filter((p) => typeof p === "string" && p.trim() !== "")
     ),
   ];
-
   const motoristasDisponiveis = [
     ...new Set(
-      abastecimentos
-        .map((ab) => ab.motorista)
-        .filter((m) => typeof m === "string" && m.trim() !== "")
+      abastecimentos.map((ab) => ab.motorista).filter((m) => typeof m === "string" && m.trim() !== "")
     ),
   ];
 
+  // Reset do formulário quando abrir/fechar modal
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
@@ -113,26 +67,25 @@ const ViagensList = () => {
         ...editando,
         dataInicio: formatData(editando.dataInicio),
         dataFim: formatData(editando.dataFim),
-        rota: editando.rota || "", // garantindo que rota esteja setado
+        rota: editando.rota || "",
       });
     } else {
       reset({});
     }
   }, [mostrarForm, editando, reset]);
 
+  // Abrir cadastro
   const abrirCadastro = () => {
     setEditando(null);
     setTituloForm("Cadastro");
     setMostrarForm(true);
   };
 
-  const fecharModal = () => {
-    setMostrarForm(false);
-  };
+  // Fechar modal cadastro
+  const fecharModal = () => setMostrarForm(false);
 
+  // Envio do formulário
   const onSubmit = async (dados) => {
-    console.log("onSubmit chamado", dados);
-
     try {
       const dadosFormatados = {
         ...dados,
@@ -146,34 +99,85 @@ const ViagensList = () => {
       }
       fecharModal();
     } catch (error) {
-      console.log("Erro ao salvar viagem:", error);
+      console.error("Erro ao salvar viagem:", error);
     }
   };
 
+  // Editar viagem
   const handleEdit = (item) => {
     setEditando(item);
     setTituloForm("Editar");
     setMostrarForm(true);
   };
 
+  // Confirmar exclusão
   const handleConfirmDelete = async () => {
     await excluirViagem(confirmarId);
     setConfirmarId(null);
   };
 
-  // Função para vincular abastecimento (a implementar conforme sua lógica)
-  const vincularAbastecimento = (abastecimento) => {
-    alert(`Vincular abastecimento ${abastecimento.id} à viagem.`);
-    // Aqui você implementa a lógica para salvar essa vinculação
+  // Abastecimentos vinculados à viagem selecionada
+  const abastecimentosVinculados = useMemo(() => {
+    if (!viagemParaVincular) return [];
+    return abastecimentos.filter((ab) => ab.viagemId === viagemParaVincular.id);
+  }, [viagemParaVincular, abastecimentos]);
+
+  // Abastecimentos disponíveis para vincular (sem viagemId e que atendam critérios)
+  const abastecimentosDisponiveis = useMemo(() => {
+    if (!viagemParaVincular) return [];
+    const { placa, motorista, dataInicio, dataFim, rota } = viagemParaVincular;
+
+    // converter timestamps para Date
+    const dtInicio = dataInicio.toDate ? dataInicio.toDate() : new Date(dataInicio);
+    const dtFim = dataFim.toDate ? dataFim.toDate() : new Date(dataFim);
+
+    return abastecimentos.filter((ab) => {
+      const dataAbastecimento = ab.data.toDate ? ab.data.toDate() : new Date(ab.data);
+      return (
+        !ab.viagemId &&
+        ab.placa === placa &&
+        ab.motorista === motorista &&
+        (ab.destino === rota || ab.rota === rota) &&
+        dataAbastecimento >= dtInicio &&
+        dataAbastecimento <= dtFim
+      );
+    });
+  }, [viagemParaVincular, abastecimentos]);
+
+  // Vincular abastecimento a viagem
+  const vincularAbastecimento = async (abastecimento) => {
+    if (!viagemParaVincular?.id) return;
+    try {
+      const abastecimentoRef = doc(db, "abastecimentos", abastecimento.id);
+      await updateDoc(abastecimentoRef, {
+        viagemId: viagemParaVincular.id,
+        atualizadoEm: new Date(),
+      });
+      alert("Abastecimento vinculado com sucesso!");
+      setViagemParaVincular((v) => ({ ...v })); // força re-render do modal
+    } catch (err) {
+      console.error("Erro ao vincular abastecimento:", err);
+      alert("Erro ao vincular abastecimento.");
+    }
   };
 
-  const onError = (errors) => {
-    console.log("Erros no formulário:", errors);
+  // Desvincular abastecimento da viagem
+  const desvincularAbastecimento = async (abastecimento) => {
+    try {
+      const abastecimentoRef = doc(db, "abastecimentos", abastecimento.id);
+      await updateDoc(abastecimentoRef, {
+        viagemId: null,
+        atualizadoEm: new Date(),
+      });
+      alert("Abastecimento desvinculado com sucesso!");
+      setViagemParaVincular((v) => ({ ...v })); // força re-render do modal
+    } catch (err) {
+      console.error("Erro ao desvincular abastecimento:", err);
+      alert("Erro ao desvincular abastecimento.");
+    }
   };
 
-  if (loadingRotas) {
-    return <p>Carregando rotas...</p>;
-  }
+  if (loadingRotas) return <p>Carregando rotas...</p>;
 
   return (
     <div
@@ -183,7 +187,6 @@ const ViagensList = () => {
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
-        boxSizing: "border-box",
       }}
     >
       <h2 style={{ marginBottom: "20px" }}>Viagens</h2>
@@ -194,24 +197,19 @@ const ViagensList = () => {
           marginBottom: "20px",
           padding: "12px 20px",
           fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
           backgroundColor: "#3498db",
           color: "#fff",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box",
+          borderRadius: "6px",
+          border: "none",
+          cursor: "pointer",
         }}
       >
         Cadastrar Viagem
       </button>
 
+      {/* Modal de cadastro/edição */}
       <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Viagem`}>
-        <Form
-          onSubmit={handleSubmit(onSubmit, onError)}
-          style={{ padding: 0, border: "none", maxWidth: "100%" }}
-        >
+        <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField label="Placa" name="placa" as="select" register={register} error={errors.placa}>
             <option value="">Selecione a placa</option>
             {placasDisponiveis.map((placa) => (
@@ -263,46 +261,12 @@ const ViagensList = () => {
 
           <FormField label="KM" name="km" type="number" register={register} error={errors.km} />
 
-          {/* Lista abastecimentos vinculáveis */}
-          {abastecimentosParaVincular.length > 0 && (
-            <div style={{ marginTop: "20px" }}>
-              <h4>Abastecimentos para vincular:</h4>
-              {abastecimentosParaVincular.map((ab) => (
-                <div
-                  key={ab.id}
-                  style={{
-                    padding: "8px",
-                    border: "1px solid #ccc",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <div>Data: {formatData(ab.data)}</div>
-                  <div>Litros: {ab.litros}</div>
-                  <div>KM: {ab.km}</div>
-                  <button
-                    style={{
-                      marginTop: "8px",
-                      padding: "6px 12px",
-                      backgroundColor: "#28a745",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => vincularAbastecimento(ab)}
-                  >
-                    Vincular abastecimento
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
           <SubmitButton loading={isSubmitting}>{editando ? "Atualizar" : "Cadastrar"}</SubmitButton>
         </Form>
       </Modal>
 
-      <input
+      {/* Input de busca */}
+      <SearchInput
         type="text"
         placeholder="Buscar viagens..."
         value={busca}
@@ -318,7 +282,8 @@ const ViagensList = () => {
         }}
       />
 
-      <div style={{ width: "100%", maxWidth: "900px" }}>
+      {/* Lista de viagens */}
+      <div>
         {filtrados.map((v) => (
           <ListItem
             key={v.id}
@@ -328,11 +293,18 @@ const ViagensList = () => {
             )} - ${formatData(v.dataFim)}`}
             onEdit={() => handleEdit(v)}
             onDelete={() => setConfirmarId(v.id)}
-            style={{ marginBottom: "12px" }}
+            actions={[
+              {
+                label: "Vincular",
+                onClick: () => setViagemParaVincular(v),
+                style: { backgroundColor: "#28a745", border: "1px solid #28a745" },
+              },
+            ]}
           />
         ))}
       </div>
 
+      {/* Confirm dialog para exclusão */}
       {confirmarId && (
         <ConfirmDialog
           title="Excluir viagem"
@@ -341,6 +313,87 @@ const ViagensList = () => {
           onCancel={() => setConfirmarId(null)}
         />
       )}
+
+      {/* Modal Vincular Abastecimentos */}
+      <Modal
+        isOpen={!!viagemParaVincular}
+        onClose={() => setViagemParaVincular(null)}
+        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
+      >
+        <div>
+          <h3>Abastecimentos disponíveis para vincular:</h3>
+          {abastecimentosDisponiveis.length > 0 ? (
+            abastecimentosDisponiveis.map((ab) => (
+              <div
+                key={ab.id}
+                style={{ padding: "8px", border: "1px solid #ccc", marginBottom: "8px" }}
+              >
+                <div>Data: {formatData(ab.data)}</div>
+                <div>Litros: {ab.litros}</div>
+                <div>KM: {ab.km}</div>
+                <button
+                  onClick={() => vincularAbastecimento(ab)}
+                  style={{
+                    marginTop: "8px",
+                    padding: "6px 12px",
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Vincular
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>Nenhum abastecimento disponível para vincular nesta viagem.</p>
+          )}
+
+          <hr style={{ margin: "20px 0" }} />
+
+          <h3>Abastecimentos já vinculados:</h3>
+          {abastecimentosVinculados.length > 0 ? (
+            abastecimentosVinculados.map((ab) => (
+              <div
+                key={ab.id}
+                style={{
+                  padding: "8px",
+                  border: "1px solid #999",
+                  marginBottom: "8px",
+                  backgroundColor: "#f0f0f0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div>Data: {formatData(ab.data)}</div>
+                  <div>Litros: {ab.litros}</div>
+                  <div>KM: {ab.km}</div>
+                </div>
+                <button
+                  onClick={() => desvincularAbastecimento(ab)}
+                  style={{
+                    marginLeft: "20px",
+                    padding: "6px 12px",
+                    backgroundColor: "#e74c3c",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Desvincular
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>Não há abastecimentos vinculados ainda.</p>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

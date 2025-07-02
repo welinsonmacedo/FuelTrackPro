@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 
 const sidebarStyle = (collapsed) => ({
@@ -61,25 +61,40 @@ const contentStyle = (collapsed) => ({
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const sidebarRef = useRef(null);
 
-const menuItems = [
-  { to: "/dashboard", icon: "📊", label: "Dashboard" },
-  { to: "/motoristas", icon: "🚚", label: "Motoristas" },
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        !collapsed &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target)
+      ) {
+        setCollapsed(true);
+      }
+    }
 
-  { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" },
-  { to: "/veiculos", icon: "🚛", label: "Veículos" },
-  { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },
-    { to: "/tipos-manutencoes", icon: "🛠️", label: "Tipos Manutenções" },
-  { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },
-    { to: "/viagens", icon: "🏢", label: "Viagens" },
-   { to: "/notificacoes", icon: "🏢", label: "Notificações" },
- 
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [collapsed]);
+
+ const menuItems = [
+  { to: "/dashboard", icon: "📊", label: "Dashboard" },       // gráfico, ok
+  { to: "/motoristas", icon: "👨‍✈️", label: "Motoristas" },   // motorista/piloto
+  { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" }, // bomba de combustível, ok
+  { to: "/veiculos", icon: "🚚", label: "Veículos" },          // caminhão
+  { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },   // ferramentas, ok
+  { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },   // prédio comercial, ok
+  { to: "/viagens", icon: "🛣️", label: "Viagens" },           // estrada
+  { to: "/medias", icon: "", label: "Medias" },           // estrada
+  { to: "/notificacoes", icon: "🔔", label: "Notificações" },   // sino de notificações
 ];
-
-
   return (
     <>
-      <aside style={sidebarStyle(collapsed)}>
+      <aside style={sidebarStyle(collapsed)} ref={sidebarRef}>
         <button
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
           style={toggleButtonStyle}
@@ -109,7 +124,6 @@ const menuItems = [
         </nav>
       </aside>
 
-      {/* Aqui no main, renderize as rotas filhas */}
       <main style={contentStyle(collapsed)}>
         <Outlet />
       </main>

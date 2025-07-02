@@ -12,9 +12,10 @@ import { Modal } from "../components/Modal";
 import { Form } from "../components/Form";
 import { SubmitButton } from "../components/SubmitButton";
 import { SearchInput } from "../components/SearchInput";
-import { ListItem } from "../components/ListItem";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatData } from "../utils/data";
+import { useNavigate } from "react-router-dom";
+
 
 const ManutencoesList = () => {
   const {
@@ -28,21 +29,26 @@ const ManutencoesList = () => {
   const { fornecedores } = useFornecedores();
   const { log } = useAuditoria();
 
-  // Estados para listagem e filtros
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
 
-  // Estado modal realização manutenção
   const [mostrarModalRealizacao, setMostrarModalRealizacao] = useState(false);
   const [manutencaoParaRealizar, setManutencaoParaRealizar] = useState(null);
   const [dataRealizacao, setDataRealizacao] = useState("");
   const [kmRealizacao, setKmRealizacao] = useState("");
   const [fornecedorRealizacao, setFornecedorRealizacao] = useState("");
 
-  // Filtro para busca
+   const navigate = useNavigate();
+
+    const tipos= () => {
+    navigate("/tipos-manutencoes");
+  };
+  // Estado para dropdown aberto em manutenções realizadas
+  const [dropdownAbertoId, setDropdownAbertoId] = useState(null);
+
   const filtradas = manutencoes.filter((m) => {
     const buscaLower = busca.toLowerCase();
     return (
@@ -51,18 +57,8 @@ const ManutencoesList = () => {
     );
   });
 
-  // Formulário de cadastro/edição
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: yupResolver(manutencaoSchema) });
-
-  // Reset form ao abrir/fechar modal
   useEffect(() => {
     if (!mostrarForm) {
-      reset({});
       setEditando(null);
     } else {
       if (editando) {
@@ -71,19 +67,23 @@ const ManutencoesList = () => {
         reset({});
       }
     }
-  }, [mostrarForm, editando, reset]);
+  }, [mostrarForm, editando]);
 
-  // Abrir modal cadastro
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: yupResolver(manutencaoSchema) });
+
   const abrirCadastro = () => {
     setEditando(null);
     setTituloForm("Cadastro");
     setMostrarForm(true);
   };
 
-  // Fechar modal cadastro
   const fecharModal = () => setMostrarForm(false);
 
-  // Abrir modal realização manutenção
   const abrirModalRealizacao = (manutencao) => {
     setManutencaoParaRealizar(manutencao);
     setDataRealizacao("");
@@ -92,84 +92,77 @@ const ManutencoesList = () => {
     setMostrarModalRealizacao(true);
   };
 
-  // Fechar modal realização manutenção
   const fecharModalRealizacao = () => {
     setMostrarModalRealizacao(false);
     setManutencaoParaRealizar(null);
   };
 
-  // Função para imprimir ficha - pode customizar conforme necessidade
   const imprimirManutencao = (m) => {
-  const conteudo = `
-    <html>
-      <head>
-        <title>Ficha de Manutenção</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-             border: 2px solid #1e2933e2;
-             padding:10px;
-          }
-          h1 {
-            color: #1E90FF;
-            border-bottom: 1px solid #0d1b29e1;
-            padding-bottom: 8px;
-          }
+    const conteudo = `
+      <html>
+        <head>
+          <title>Ficha de Manutenção</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              color: #333;
+              border: 2px solid #1e2933e2;
+              padding:10px;
+            }
+            h1 {
+              color: #1E90FF;
+              border-bottom: 1px solid #0d1b29e1;
+              padding-bottom: 8px;
+            }
             div {
-             padding: 8px;
-            border-bottom: 1px solid #090b0cb0;
-           
-          }
-          p {
-            font-size: 16px;
-            line-height: 1.4;
-            margin: 6px 0;
-          }
-          b {
-            color: #555;
-          }
-            footer{
-            margin-top:90%;}
-        </style>
-      </head>
-      <body>
-        <h1>Ficha de Manutenção</h1>
-        <p><b>Placa:</b> ${m.placa}</p>
-        <p><b>Tipo:</b> ${m.tipoManutencao}</p>
-        <p><b>Fornecedor:</b> ${m.fornecedor}</p>
-        <p><b>KM Atual:</b> ${m.km}</p>
-        <p><b>Observação:</b> ${m.observacao || "-"}</p>
-        <p><b>Próxima Revisão Data:</b> ${
-          m.proximaRevisaoData ? formatData(m.proximaRevisaoData) : "-"
-        }</p>
-        <p><b>Próxima Revisão KM:</b> ${m.proximaRevisaoKm || "-"}</p>
-        <footer>
-        <div>
-           <p>Assinatura Oficina: </p>
-        </div>
-     <div>
-       <p>Assinatura Gerência: </p>
-     </div>
-      
-         </footer>
+              padding: 8px;
+              border-bottom: 1px solid #090b0cb0;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.4;
+              margin: 6px 0;
+            }
+            b {
+              color: #555;
+            }
+            footer {
+              margin-top: 90%;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Ficha de Manutenção</h1>
+          <p><b>Placa:</b> ${m.placa}</p>
+          <p><b>Tipo:</b> ${m.tipoManutencao}</p>
+          <p><b>Fornecedor:</b> ${m.fornecedor}</p>
+          <p><b>KM Atual:</b> ${m.km}</p>
+          <p><b>Observação:</b> ${m.observacao || "-"}</p>
+          <p><b>Próxima Revisão Data:</b> ${
+            m.proximaRevisaoData ? formatData(m.proximaRevisaoData) : "-"
+          }</p>
+          <p><b>Próxima Revisão KM:</b> ${m.proximaRevisaoKm || "-"}</p>
+          <footer>
+            <div>
+              <p>Assinatura Oficina: </p>
+            </div>
+            <div>
+              <p>Assinatura Gerência: </p>
+            </div>
+          </footer>
+        </body>
+      </html>
+    `;
 
-        
-      </body>
-    </html>
-  `;
+    const w = window.open("", "_blank");
+    w.document.write(conteudo);
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+  };
 
-  const w = window.open("", "_blank");
-  w.document.write(conteudo);
-  w.document.close();
-  w.focus();
-  w.print();
-  w.close();
-};
-
-
-  // Confirmar realização da manutenção
   const handleConfirmarRealizacao = async () => {
     if (!dataRealizacao || !kmRealizacao || !fornecedorRealizacao) {
       alert("Preencha todos os campos para concluir a realização.");
@@ -182,10 +175,10 @@ const ManutencoesList = () => {
 
     const dataRealizacaoObj = new Date(dataRealizacao);
 
-    // Calcular próxima revisão baseado em tipo
     const proximaRevisaoData = tipoSelecionado?.tempoDias
       ? new Date(
-          dataRealizacaoObj.getTime() + tipoSelecionado.tempoDias * 24 * 60 * 60 * 1000
+          dataRealizacaoObj.getTime() +
+            tipoSelecionado.tempoDias * 24 * 60 * 60 * 1000
         )
       : null;
 
@@ -193,7 +186,6 @@ const ManutencoesList = () => {
       ? parseInt(kmRealizacao) + parseInt(tipoSelecionado.tempoKm)
       : null;
 
-    // Atualiza manutenção atual marcando como realizada
     await editarManutencao(manutencaoParaRealizar.id, {
       ...manutencaoParaRealizar,
       dataRealizacao: dataRealizacaoObj,
@@ -202,11 +194,10 @@ const ManutencoesList = () => {
       realizada: true,
     });
 
-    // Criar nova manutenção para próximo ciclo
     const novaManutencao = {
       placa: manutencaoParaRealizar.placa,
       tipoManutencao: manutencaoParaRealizar.tipoManutencao,
-      fornecedor: "", // pode ficar vazio ou pré-definido
+      fornecedor: "",
       km: proximaRevisaoKm || 0,
       observacao: "",
       proximaRevisaoData,
@@ -226,7 +217,6 @@ const ManutencoesList = () => {
     fecharModalRealizacao();
   };
 
-  // Submit cadastro/edição
   const onSubmit = async (dados) => {
     const tipoSelecionado = tiposManutencao.find(
       (t) => t.nome === dados.tipoManutencao
@@ -276,6 +266,7 @@ const ManutencoesList = () => {
     setEditando(item);
     setTituloForm("Editar");
     setMostrarForm(true);
+    setDropdownAbertoId(null);
   };
 
   const handleConfirmDelete = async () => {
@@ -289,6 +280,11 @@ const ManutencoesList = () => {
       null
     );
     setConfirmarId(null);
+    setDropdownAbertoId(null);
+  };
+
+  const toggleDropdown = (id) => {
+    setDropdownAbertoId((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -301,7 +297,32 @@ const ManutencoesList = () => {
         borderRadius: "8px",
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Manutenções</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h2 style={{ marginBottom: "20px" }}>Manutenções</h2>
+        <button
+          onClick={tipos}
+          style={{
+            marginBottom: "10px",
+            padding: "10px 10px",
+            fontSize: "16px",
+            backgroundColor: "#cfd3d6",
+            color: "#110a0a",
+            border: "none",
+            borderRadius: "6px",
+            width: "auto",
+            cursor:"pointer"
+          }}
+        >
+          Tipos de Manutenção
+        </button>
+      </div>
 
       <button
         onClick={abrirCadastro}
@@ -329,68 +350,52 @@ const ManutencoesList = () => {
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField
             label="Placa"
-            name="placa"
-            as="select"
-            register={register}
-            error={errors.placa}
-          >
-            <option value="">Selecione a placa</option>
-            {veiculos.map((v) => (
-              <option key={v.id} value={v.placa}>
-                {v.placa} - {v.modelo}
-              </option>
-            ))}
-          </FormField>
-
+            {...register("placa")}
+            error={errors.placa?.message}
+            options={veiculos.map((v) => v.placa)}
+            listId="veiculos-list"
+          />
           <FormField
-            label="Tipo de Manutenção"
-            name="tipoManutencao"
-            as="select"
-            register={register}
-            error={errors.tipoManutencao}
-          >
-            <option value="">Selecione o tipo</option>
-            {Array.isArray(tiposManutencao) &&
-              tiposManutencao.map((tipo) => (
-                <option key={tipo.id} value={tipo.nome}>
-                  {tipo.nome}
-                </option>
-              ))}
-          </FormField>
-
+            label="Tipo Manutenção"
+            {...register("tipoManutencao")}
+            error={errors.tipoManutencao?.message}
+            options={tiposManutencao.map((t) => t.nome)}
+            listId="tipos-list"
+          />
           <FormField
             label="Fornecedor"
-            name="fornecedor"
-            as="select"
-            register={register}
-            error={errors.fornecedor}
-          >
-            <option value="">Selecione o fornecedor</option>
-            {fornecedores.map((f) => (
-              <option key={f.id} value={f.nome}>
-                {f.nome}
-              </option>
-            ))}
-          </FormField>
-
-          <FormField
-            label="KM Atual"
-            name="km"
-            type="number"
-            register={register}
-            error={errors.km}
+            {...register("fornecedor")}
+            error={errors.fornecedor?.message}
+            options={fornecedores.map((f) => f.nome)}
+            listId="fornecedores-list"
           />
-
+          <FormField
+            label="KM"
+            type="number"
+            {...register("km")}
+            error={errors.km?.message}
+          />
           <FormField
             label="Observação"
-            name="observacao"
-            type="text"
-            register={register}
-            error={errors.observacao}
+            {...register("observacao")}
+            error={errors.observacao?.message}
+            type="textarea"
           />
-
-          <SubmitButton loading={isSubmitting}>
-            {editando ? "Atualizar" : "Cadastrar"}
+          <SubmitButton
+            disabled={isSubmitting}
+            style={{
+              marginTop: "15px",
+              width: "100%",
+              backgroundColor: "#3498db",
+              color: "#fff",
+              padding: "10px",
+              fontSize: "16px",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {tituloForm}
           </SubmitButton>
         </Form>
       </Modal>
@@ -403,14 +408,20 @@ const ManutencoesList = () => {
           manutencaoParaRealizar?.placa || ""
         }`}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleConfirmarRealizacao();
+          }}
+        >
           <label>
-            Data da realização:
+            Data de realização:
             <input
               type="date"
               value={dataRealizacao}
               onChange={(e) => setDataRealizacao(e.target.value)}
-              style={{ width: "90%", padding: "8px", marginTop: "4px" }}
+              required
+              style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
             />
           </label>
           <label>
@@ -419,17 +430,20 @@ const ManutencoesList = () => {
               type="number"
               value={kmRealizacao}
               onChange={(e) => setKmRealizacao(e.target.value)}
-              style={{ width: "90%", padding: "8px", marginTop: "4px" }}
+              required
+              style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
+              min={manutencaoParaRealizar?.km || 0}
             />
           </label>
           <label>
-            Oficina / Fornecedor:
+            Fornecedor da realização:
             <select
               value={fornecedorRealizacao}
               onChange={(e) => setFornecedorRealizacao(e.target.value)}
-              style={{ width: "95%", padding: "8px", marginTop: "4px" }}
+              required
+              style={{ width: "100%", marginBottom: "10px", padding: "6px" }}
             >
-              <option value="">Selecione o fornecedor</option>
+              <option value="">Selecione um fornecedor</option>
               {fornecedores.map((f) => (
                 <option key={f.id} value={f.nome}>
                   {f.nome}
@@ -437,42 +451,36 @@ const ManutencoesList = () => {
               ))}
             </select>
           </label>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "20px",
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button
-              onClick={() => imprimirManutencao(manutencaoParaRealizar)}
+              type="button"
+              onClick={fecharModalRealizacao}
               style={{
-                backgroundColor: "#3498db",
-                color: "#fff",
-                padding: "10px 15px",
-                border: "none",
-                borderRadius: "5px",
+                marginRight: "10px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
                 cursor: "pointer",
+                backgroundColor: "#eee",
               }}
             >
-              Imprimir ficha (antes)
+              Cancelar
             </button>
             <button
-              onClick={handleConfirmarRealizacao}
+              type="submit"
               style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                border: "none",
                 backgroundColor: "#27ae60",
                 color: "#fff",
-                padding: "10px 15px",
-                border: "none",
-               
-                borderRadius: "5px",
                 cursor: "pointer",
               }}
             >
-              Confirmar realização
+              Confirmar
             </button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       <SearchInput
@@ -483,46 +491,185 @@ const ManutencoesList = () => {
       />
 
       <div>
-        {filtradas.map((m) => (
-          <ListItem
-    key={m.id}
-    title={`${m.placa} - ${m.tipoManutencao}`}
-    subtitle={`Fornecedor: ${m.fornecedor || "-"} | Próxima revisão: ${
-      m.proximaRevisaoData
-        ? `Data: ${formatData(m.proximaRevisaoData)}`
-        : "-"
-    } | KM prevista: ${m.proximaRevisaoKm || "-"}`}
-    onEdit={m.realizada ? undefined : () => handleEdit(m)}
-    onDelete={m.realizada ? undefined : () => setConfirmarId(m.id)}
-    style={{ marginBottom: "12px" }}
-    actions={
-      m.realizada
-        ? [
-            {
-              label: "Visualizar ficha",
-              onClick: () => imprimirManutencao(m),
-              style: { backgroundColor: "#95a5a6", color: "white" },
-            },
-          ]
-        : [
-            {
-              label: "Marcar como realizada",
-              onClick: () => abrirModalRealizacao(m),
-              style: {
-                backgroundColor: "#27ae60",
-                color: "white",
-                marginRight: 8,
-              },
-            },
-            {
-              label: "Imprimir ficha",
-              onClick: () => imprimirManutencao(m),
-              style: { backgroundColor: "#3498db", color: "white" },
-            },
-          ]
-    }
-  />
-        ))}
+        {filtradas.map((m) => {
+          const realizado = m.realizada;
+          return (
+            <div
+              key={m.id}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "6px",
+                padding: "12px",
+                marginBottom: "12px",
+                position: "relative",
+                backgroundColor: realizado ? "#ecf0f1" : "#fff",
+              }}
+            >
+              <strong>
+                {m.placa} - {m.tipoManutencao}
+              </strong>
+              <div
+                style={{ marginTop: "4px", fontSize: "14px", color: "#555" }}
+              >
+                Fornecedor: {m.fornecedor || "-"} | Próxima revisão:{" "}
+                {m.proximaRevisaoData
+                  ? `Data: ${formatData(m.proximaRevisaoData)}`
+                  : "-"}{" "}
+                | KM prevista: {m.proximaRevisaoKm || "-"}
+              </div>
+
+              {!realizado ? (
+                <div style={{ marginTop: "8px" }}>
+                  <button
+                    onClick={() => abrirModalRealizacao(m)}
+                    style={{
+                      backgroundColor: "#27ae60",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 12px",
+                      marginRight: "8px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Marcar como realizada
+                  </button>
+
+                  <button
+                    onClick={() => imprimirManutencao(m)}
+                    style={{
+                      backgroundColor: "#3498db",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 12px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Imprimir ficha
+                  </button>
+
+                  <button
+                    onClick={() => handleEdit(m)}
+                    style={{
+                      backgroundColor: "#f39c12",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 12px",
+                      marginLeft: "8px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => setConfirmarId(m.id)}
+                    style={{
+                      backgroundColor: "#e74c3c",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 12px",
+                      marginLeft: "8px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: "8px", position: "relative" }}>
+                  <button
+                    onClick={() => toggleDropdown(m.id)}
+                    style={{
+                      backgroundColor: "#95a5a6",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 12px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                    }}
+                  >
+                    Visualizar ficha ▾
+                  </button>
+
+                  {dropdownAbertoId === m.id && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "40px",
+                        left: "0",
+                        backgroundColor: "#fff",
+                        border: "1px solid #ccc",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                        borderRadius: "4px",
+                        zIndex: 100,
+                        width: "180px",
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          imprimirManutencao(m);
+                          setDropdownAbertoId(null);
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          padding: "8px 12px",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Visualizar ficha
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDropdownAbertoId(null);
+                          handleEdit(m);
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          padding: "8px 12px",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          color: "#f39c12",
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDropdownAbertoId(null);
+                          setConfirmarId(m.id);
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          padding: "8px 12px",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          color: "#e74c3c",
+                        }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {confirmarId && (

@@ -1,39 +1,52 @@
 import React from "react";
 import { useManutencoes } from "../hooks/useManutencoes";
 import { useAbastecimentos } from "../hooks/useAbastecimentos";
+import { useTiposManutencao } from "../hooks/useTiposManutencao";
 import { formatData } from "../utils/data";
+import { useNavigate } from "react-router-dom"; // Importa o hook de navegação
 
 const Notificacoes = () => {
   const { manutencoes } = useManutencoes();
   const { abastecimentos } = useAbastecimentos();
+  const { tipos } = useTiposManutencao(); // pegando só os tipos
 
   const hoje = new Date();
-
-  // Pega o último KM de um veículo com base nos abastecimentos
+  const navigate = useNavigate();
+  // Função para obter último km abastecido do veículo
   function getUltimoKm(placa) {
     const doVeiculo = abastecimentos
       .filter((a) => a.placa === placa)
-      .sort((a, b) => b.kmAbastecimento - a.kmAbastecimento);
-    return doVeiculo[0]?.kmAbastecimento || 0;
+      .sort(
+        (a, b) =>
+          Number(b.kmAbastecimento || b.km || 0) -
+          Number(a.kmAbastecimento || a.km || 0)
+      );
+    return Number(doVeiculo[0]?.kmAbastecimento || doVeiculo[0]?.km || 0);
   }
 
-  // Filtro para gerar alertas com base nos critérios de cada tipo de manutenção
+  // Função para buscar o tipo completo pelo nome no estado tipos
+  function buscarTipoManutencao(nomeTipo) {
+    if (!tipos) return null;
+    return tipos.find((t) => t.nome === nomeTipo) || null;
+  }
+
+  // Filtra as manutenções que estão em alerta
   const alertas = manutencoes.filter((m) => {
     if (m.realizada) return false;
 
     const ultimoKm = getUltimoKm(m.placa);
-    const tipo = m.tipoManutencao;
+    const tipoCompleto = buscarTipoManutencao(m.tipoManutencao);
 
-    if (!tipo) return false;
+    if (!tipoCompleto) return false;
 
-    const diasAntecedencia = tipo.diasAntecedencia || 0;
-    const kmAntecedencia = tipo.kmAntecedencia || 0;
+    const diasAntecedencia = tipoCompleto.avisoDiasAntes || 0;
+    const kmAntecedencia = tipoCompleto.avisoKmAntes || 0;
 
     let alertaData = false;
     let alertaKm = false;
 
     if (m.proximaRevisaoData) {
-      const dataRevisao = new Date(m.proximaRevisaoData);
+      const dataRevisao = m.proximaRevisaoData.toDate();
       const diffDias = Math.ceil((dataRevisao - hoje) / (1000 * 60 * 60 * 24));
       alertaData = diffDias <= diasAntecedencia && diffDias >= 0;
     }
@@ -54,10 +67,12 @@ const Notificacoes = () => {
         <p style={{ color: "#555" }}>Nenhuma notificação no momento.</p>
       ) : (
         alertas.map((m) => {
-          const tipo = m.tipoManutencao;
+          const tipoCompleto = buscarTipoManutencao(m.tipoManutencao);
           const kmAtual = getUltimoKm(m.placa);
           const diffDias = m.proximaRevisaoData
-            ? Math.ceil((new Date(m.proximaRevisaoData) - hoje) / (1000 * 60 * 60 * 24))
+            ? Math.ceil(
+                (m.proximaRevisaoData.toDate() - hoje) / (1000 * 60 * 60 * 24)
+              )
             : null;
           const diffKm = m.proximaRevisaoKm
             ? m.proximaRevisaoKm - kmAtual
@@ -73,21 +88,26 @@ const Notificacoes = () => {
                 marginBottom: "1rem",
                 backgroundColor: "#fffaf3",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                cursor: "pointer",
               }}
+              onClick={() => navigate(`/manutencoes`)} // Navega para a página de manutenção passando o id
+              title="Clique para ver detalhes da manutenção"
             >
               <h3 style={{ marginBottom: "0.5rem" }}>
-                🚗 {m.placa} - {tipo?.nome || "Tipo não informado"}
+                🚗 {m.placa} - {tipoCompleto?.nome || "Tipo não informado"}
               </h3>
               <p>
-                <b>Fornecedor:</b> {m.fornecedor} <br />
+                <b>Fornecedor:</b> {m.fornecedor || "-"} <br />
                 <b>Observação:</b> {m.observacao || "-"}
               </p>
 
               {m.proximaRevisaoData && (
                 <p>
-                  <b>Próxima Revisão (Data):</b> {formatData(m.proximaRevisaoData)} <br />
+                  <b>Próxima Revisão (Data):</b>{" "}
+                  {formatData(m.proximaRevisaoData)} <br />
                   <b>Faltam:</b> {diffDias} dia(s) <br />
-                  <b>Antecedência Padrão:</b> {tipo?.diasAntecedencia || "-"} dias
+                  <b>Antecedência Padrão:</b>{" "}
+                  {tipoCompleto?.avisoDiasAntes ?? "-"} dias
                 </p>
               )}
 
@@ -96,7 +116,8 @@ const Notificacoes = () => {
                   <b>Próxima Revisão (KM):</b> {m.proximaRevisaoKm} <br />
                   <b>KM Atual:</b> {kmAtual} <br />
                   <b>Faltam:</b> {diffKm} km <br />
-                  <b>Antecedência Padrão:</b> {tipo?.kmAntecedencia || "-"} km
+                  <b>Antecedência Padrão:</b>{" "}
+                  {tipoCompleto?.avisoKmAntes ?? "-"} km
                 </p>
               )}
             </div>

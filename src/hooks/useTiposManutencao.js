@@ -43,10 +43,16 @@ export const useTiposManutencao = () => {
     await deleteDoc(doc(db, "tiposManutencao", id));
   };
 
+  // Corrigido: buscarTipoManutencao é função síncrona, sem async/await, retorna o tipo ou null
+  const buscarTipoManutencao = (nomeTipo) => {
+    return tipos.find((t) => t.nome === nomeTipo) || null;
+  };
+
   return {
     tipos,
     adicionarTipo,
     editarTipo,
     excluirTipo,
+    buscarTipoManutencao,
   };
 };
