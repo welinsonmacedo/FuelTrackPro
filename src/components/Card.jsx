@@ -9,6 +9,7 @@ const Card = ({ title, children, style = {} }) => {
         borderRadius: "8px",
         padding: "20px",
         minWidth: "150px",
+        margin:"20px",
         ...style,
       }}
     >

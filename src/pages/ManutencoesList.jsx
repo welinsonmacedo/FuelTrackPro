@@ -50,10 +50,10 @@ const ManutencoesList = () => {
   const [dropdownAbertoId, setDropdownAbertoId] = useState(null);
 
   const filtradas = manutencoes.filter((m) => {
-    const buscaLower = busca.toLowerCase();
+    const buscaLower = String(busca || "").toLowerCase();
     return (
-      m.placa?.toLowerCase().includes(buscaLower) ||
-      m.fornecedor?.toLowerCase().includes(buscaLower)
+      (m.placa?.toLowerCase().includes(buscaLower)) ||
+      (m.fornecedor?.toLowerCase().includes(buscaLower))
     );
   });
 

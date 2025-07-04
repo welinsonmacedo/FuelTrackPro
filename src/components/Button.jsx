@@ -15,6 +15,7 @@ export default function Button({ children, disabled, onClick, type = "button" })
         width: '100%',
         maxWidth: '300px',
         transition: 'background-color 0.3s ease',
+        margin:"0"
       }}
       onMouseEnter={e => {
         if (!disabled) e.currentTarget.style.backgroundColor = '#1e40af';

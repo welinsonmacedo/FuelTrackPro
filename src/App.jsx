@@ -16,6 +16,7 @@ import TiposManutencaoList from "./pages/TiposManutencaoList";
 import Notificacoes from "./pages/Notificacoes";
 import ViagensList from "./pages/ViagensList";
 import MediasPage from "./pages/MediasPage";
+import MediasCalculadasPage from "./pages/MediasCalculadasPage ";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="notificacoes" element={<Notificacoes/>} />
               <Route path="viagens" element={<ViagensList/>} />
               <Route path="medias" element={<MediasPage/>} />
+              <Route path="mediasreport" element={<MediasCalculadasPage/>} />
            
             </Route>
           </Routes>

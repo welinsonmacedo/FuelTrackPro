@@ -7,6 +7,7 @@ export const FormField = ({
   children,
   options,
   listId,
+  register,
   ...rest
 }) => {
   const commonStyle = {
@@ -19,8 +20,10 @@ export const FormField = ({
     height: "38px",
   };
 
+  const registered = register ? register(name) : {};
+
   return (
-    <div style={{ minWidth: "300px" }}>
+    <div style={{ minWidth: "300px", marginBottom: "15px" }}>
       {label && (
         <label
           htmlFor={name}
@@ -29,15 +32,26 @@ export const FormField = ({
           {label}
         </label>
       )}
+
       {as === "select" ? (
-        <select id={name} {...rest} style={commonStyle} list={listId}>
-          {children || options?.map((opt, i) => (
-            <option key={i} value={opt}>{opt}</option>
-          ))}
+        <select
+          id={name}
+          {...registered}
+          {...rest}
+          style={commonStyle}
+          list={listId}
+        >
+          {children ||
+            options?.map((opt, i) => (
+              <option key={i} value={opt}>
+                {opt}
+              </option>
+            ))}
         </select>
       ) : as === "textarea" ? (
         <textarea
           id={name}
+          {...registered}
           {...rest}
           style={{ ...commonStyle, height: "auto", minHeight: "80px" }}
           list={listId}
@@ -46,14 +60,17 @@ export const FormField = ({
         <input
           id={name}
           type={type}
+          {...registered}
           {...rest}
           style={commonStyle}
           list={listId}
         />
       )}
+
       {error && (
-        <span style={{ color: "red", fontSize: "12px" }}>{error}</span>
+        <span style={{ color: "red", fontSize: "12px" }}>{error.message}</span>
       )}
+
       {options && listId && (
         <datalist id={listId}>
           {options.map((opt, i) => (

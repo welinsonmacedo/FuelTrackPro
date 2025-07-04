@@ -1,11 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useMedias } from "../hooks/useMedias";
 import ResumoModal from "../components/ResumoModal";
 import { formatData } from "../utils/data";
-
-function extrairData(item) {
-  return item.data || item.criadoEm || null;
-}
 
 export default function MediasPage() {
   const [filtroMotorista, setFiltroMotorista] = useState("");
@@ -14,45 +10,72 @@ export default function MediasPage() {
 
   const { abastecimentos } = useMedias();
 
-  // Filtra abastecimentos pelo motorista e placa
+  useEffect(() => {
+    console.log("Abastecimentos recebidos:", abastecimentos);
+  }, [abastecimentos]);
+
+  // Filtra abastecimentos pela placa e motorista
   const abastecimentosFiltrados = useMemo(() => {
-    return abastecimentos.filter((a) => {
-      const matchMotorista = filtroMotorista
-        ? a.motorista?.toLowerCase().includes(filtroMotorista.toLowerCase())
-        : true;
-      const matchPlaca = filtroPlaca
-        ? a.placa?.toLowerCase().includes(filtroPlaca.toLowerCase())
-        : true;
-      return matchMotorista && matchPlaca;
-    });
+    return abastecimentos
+      .filter((a) => {
+        const matchMotorista = filtroMotorista
+          ? a.motorista?.toLowerCase().includes(filtroMotorista.toLowerCase())
+          : true;
+        const matchPlaca = filtroPlaca
+          ? a.placa?.toLowerCase().includes(filtroPlaca.toLowerCase())
+          : true;
+        return matchMotorista && matchPlaca;
+      })
+      .sort((a, b) => a.km - b.km); // garantir ordem crescente de km
   }, [abastecimentos, filtroMotorista, filtroPlaca]);
 
-  // Cálculo da média geral por tanque cheio (para exibir no topo)
-  const mediaGeral = useMemo(() => {
-    const ordenados = [...abastecimentosFiltrados].sort((a, b) => a.km - b.km);
-    let totalKm = 0;
-    let totalLitros = 0;
+  useEffect(() => {
+    console.log("Abastecimentos filtrados:", abastecimentosFiltrados);
+  }, [abastecimentosFiltrados]);
 
-    for (let i = 1; i < ordenados.length; i++) {
-      const anterior = ordenados[i - 1];
-      const atual = ordenados[i];
+  // Gera trechos com média
+  const mediasPorTrecho = useMemo(() => {
+    const trechos = [];
+    let anterior = null;
 
-      if (anterior.tanqueCheio && atual.tanqueCheio) {
-        const km = atual.km - anterior.km;
+    for (let atual of abastecimentosFiltrados) {
+      if (anterior /* && anterior.tanqueCheio && atual.tanqueCheio */) {
+        const kmRodado = atual.km - anterior.km;
         const litros = atual.litros;
-        if (km > 0 && litros > 0) {
-          totalKm += km;
-          totalLitros += litros;
+    
+        if (kmRodado > 0 && litros > 0) {
+          trechos.push({
+            id: atual.id,
+            motorista: atual.motorista,
+            placa: atual.placa,
+            data: atual.data || atual.criadoEm || null,
+            kmInicial: anterior.km,
+            kmFinal: atual.km,
+            litros,
+            media: (kmRodado / litros).toFixed(2),
+            abastecimento: atual,
+          });
         }
       }
+      anterior = atual;
     }
-
-    return totalLitros > 0 ? (totalKm / totalLitros).toFixed(2) : "-";
+    return trechos;
   }, [abastecimentosFiltrados]);
+
+  useEffect(() => {
+    console.log("Médias por trecho:", mediasPorTrecho);
+  }, [mediasPorTrecho]);
+
+  // Média geral
+  const mediaGeral = useMemo(() => {
+    const totalKm = mediasPorTrecho.reduce((acc, t) => acc + (t.kmFinal - t.kmInicial), 0);
+    const totalLitros = mediasPorTrecho.reduce((acc, t) => acc + t.litros, 0);
+    return totalLitros > 0 ? (totalKm / totalLitros).toFixed(2) : "-";
+  }, [mediasPorTrecho]);
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Média de Consumo por Abastecimento (Tanque Cheio)</h1>
+      <h1>Média de Consumo </h1>
 
       <div style={{ marginTop: 10, marginBottom: 20 }}>
         <input
@@ -73,26 +96,34 @@ export default function MediasPage() {
       </div>
 
       <div style={{ marginTop: 30 }}>
-        <h2>Abastecimentos</h2>
-        {abastecimentosFiltrados.length === 0 ? (
-          <p>Nenhum abastecimento encontrado.</p>
+        <h2>Medias</h2>
+        {mediasPorTrecho.length === 0 ? (
+          <p>Nenhum trecho encontrado com dois abastecimentos de tanque cheio.</p>
         ) : (
-          abastecimentosFiltrados.map((item) => (
+          mediasPorTrecho.map((trecho) => (
             <div
-              key={item.id}
-              onClick={() => setSelecionado(item)}
+              key={trecho.id}
+              onClick={() => setSelecionado(trecho.abastecimento)}
               style={{
                 cursor: "pointer",
                 padding: 10,
-                marginBottom: 5,
+                marginBottom: 10,
                 border: "1px solid #ccc",
                 borderRadius: 4,
                 backgroundColor: "#f9f9f9",
               }}
             >
-              <strong>{item.motorista || "Motorista não informado"}</strong> —{" "}
-              {item.placa || "Placa não informada"} <br />
-              <small>{extrairData(item) ? formatData(extrairData(item)) : "Data não informada"}</small>
+              <strong>{trecho.motorista || "Motorista não informado"}</strong> —{" "}
+              {trecho.placa || "Placa não informada"} <br />
+              <small>
+                {trecho.data ? formatData(trecho.data) : "Data não informada"}
+              </small>
+              <br />
+              <span>
+                <strong>Média:</strong> {trecho.media} km/l &nbsp;|&nbsp;
+                <strong>Litros:</strong> {trecho.litros} L &nbsp;|&nbsp;
+                <strong>KM rodado:</strong> {trecho.kmFinal - trecho.kmInicial} km
+              </span>
             </div>
           ))
         )}

@@ -90,6 +90,7 @@ export default function Layout() {
   { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },   // prédio comercial, ok
   { to: "/viagens", icon: "🛣️", label: "Viagens" },           // estrada
   { to: "/medias", icon: "", label: "Medias" },           // estrada
+  { to: "/mediasreport", icon: "", label: "Medias Relato" },           // estrada
   { to: "/notificacoes", icon: "🔔", label: "Notificações" },   // sino de notificações
 ];
   return (

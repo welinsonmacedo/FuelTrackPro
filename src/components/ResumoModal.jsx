@@ -4,13 +4,25 @@ import { formatData } from "../utils/data";
 export default function ResumoModal({ dados, onClose }) {
   if (!dados) return null;
 
-  // Média por tanque cheio depende do próximo abastecimento, aqui só mostramos mensagem
-  const calcularMediaPorTanqueCheio = () => {
-    if (!dados.km || dados.tanqueCheio === undefined) return "-";
-    return "Depende do próximo abastecimento";
-  };
-
   const dataParaExibir = dados.data || dados.criadoEm || null;
+  console.log(dados.kmAnterior)
+  const calcularMedia = () => {
+    if (
+      dados.tanqueCheio !== true || // só calcula se for tanque cheio
+      typeof dados.km !== "number" ||
+      typeof dados.kmAnterior !== "number" ||
+      typeof dados.litros !== "number"
+      
+    ) {
+      return "-";
+    }
+   
+    const distancia = dados.km - dados.kmAnterior;
+    if (distancia <= 0 || dados.litros === 0) return "-";
+
+    const media = distancia / dados.litros;
+    return `${media.toFixed(2)} km/L`;
+  };
 
   return (
     <div
@@ -64,9 +76,11 @@ export default function ResumoModal({ dados, onClose }) {
         <p>
           <strong>Data:</strong> {dataParaExibir ? formatData(dataParaExibir) : "-"}
         </p>
-
         <p>
           <strong>KM:</strong> {dados.km || "-"}
+        </p>
+        <p>
+          <strong>KM Anterior:</strong> {dados.kmAnterior || "-"}
         </p>
         <p>
           <strong>Litros:</strong> {dados.litros || "-"} L
@@ -84,7 +98,7 @@ export default function ResumoModal({ dados, onClose }) {
 
         <hr />
         <p>
-          <strong>Média por Tanque Cheio:</strong> {calcularMediaPorTanqueCheio()}
+          <strong>Média:</strong> {calcularMedia()}
         </p>
       </div>
     </div>

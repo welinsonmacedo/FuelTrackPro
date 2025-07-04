@@ -15,6 +15,7 @@ import { SubmitButton } from "../components/SubmitButton";
 import { Form } from "../components/Form";
 import { Modal } from "../components/Modal";
 import { formatData } from "../utils/data";
+
 // Função auxiliar para pegar último km abastecido por veículo
 const getUltimoKmPorVeiculo = (abastecimentos) =>
   abastecimentos.reduce((acc, cur) => {
@@ -43,13 +44,11 @@ const AbastecimentosList = () => {
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
 
-  // Indexar últimos kms para validação
   const ultimoKmPorVeiculo = useMemo(
     () => getUltimoKmPorVeiculo(abastecimentos),
     [abastecimentos]
   );
 
-  // Filtrar abastecimentos pela placa, motorista ou fornecedor
   const filtrados = abastecimentos.filter((a) => {
     const buscaLower = busca.toLowerCase();
     return (
@@ -59,7 +58,6 @@ const AbastecimentosList = () => {
     );
   });
 
-  // Hook Form com validação dinâmica para litros e km
   const {
     register,
     handleSubmit,
@@ -72,12 +70,10 @@ const AbastecimentosList = () => {
     resolver: yupResolver(abastecimentoSchema),
   });
 
-  // Watch campos para validação customizada
   const watchedPlaca = watch("placa");
   const watchedKm = watch("km");
   const watchedLitros = watch("litros");
 
-  // Validação extra litros vs capacidade tanque
   useEffect(() => {
     if (!watchedPlaca || !watchedLitros) return;
 
@@ -97,14 +93,12 @@ const AbastecimentosList = () => {
     }
   }, [watchedPlaca, watchedLitros, setError, clearErrors, veiculos]);
 
-  // Validação extra km ≥ último km abastecido
   useEffect(() => {
     if (!watchedPlaca || !watchedKm) return;
 
     const kmNum = Number(watchedKm);
     const ultimoKm = ultimoKmPorVeiculo[watchedPlaca] || 0;
 
-    // Se estamos editando e o km não mudou, não dá erro
     if (editando && editando.km === kmNum) {
       clearErrors("km");
       return;
@@ -127,7 +121,6 @@ const AbastecimentosList = () => {
     editando,
   ]);
 
-  // Reset form ao abrir/fechar modal e editar
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
@@ -135,28 +128,22 @@ const AbastecimentosList = () => {
     } else if (editando) {
       reset({
         ...editando,
-        data: editando.data
-          ? formatData(editando.data)
-          : "",
+        data: editando.data ? formatData(editando.data) : "",
       });
     } else {
       reset({});
     }
   }, [mostrarForm, editando, reset]);
 
-  // Abrir cadastro
   const abrirCadastro = () => {
     setEditando(null);
     setTituloForm("Cadastro");
     setMostrarForm(true);
   };
 
-  // Fechar modal
   const fecharModal = () => setMostrarForm(false);
 
-  // Submit form
   const onSubmit = async (dados) => {
-    // converte data string para Date
     const dadosFormatados = { ...dados, data: new Date(dados.data) };
 
     if (editando) {
@@ -184,14 +171,12 @@ const AbastecimentosList = () => {
     fecharModal();
   };
 
-  // Editar item
   const handleEdit = (item) => {
     setEditando(item);
     setTituloForm("Editar");
     setMostrarForm(true);
   };
 
-  // Confirmar exclusão
   const handleConfirmDelete = async () => {
     const dadosAntes = abastecimentos.find((a) => a.id === confirmarId);
     await excluirAbastecimento(confirmarId);
@@ -238,98 +223,94 @@ const AbastecimentosList = () => {
         Cadastrar Abastecimento
       </button>
 
-      <Modal
-  isOpen={mostrarForm}
-  onClose={fecharModal}
-  title={`${tituloForm} Abastecimento`}
->
-  <Form onSubmit={handleSubmit(onSubmit)}>
-    <FormField
-      label="Placa"
-      name="placa"
-      as="select"
-      register={register}
-      error={errors.placa}
-    >
-      <option value="">Selecione a placa</option>
-      {veiculos.map((v) => (
-        <option key={v.id} value={v.placa}>
-          {v.placa} - {v.modelo}
-        </option>
-      ))}
-    </FormField>
+      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Abastecimento`}>
+        <Form onSubmit={handleSubmit(onSubmit)}>
+          <FormField
+            label="Placa"
+            name="placa"
+            as="select"
+            register={register}
+            error={errors.placa}
+          >
+            <option value="">Selecione a placa</option>
+            {veiculos.map((v) => (
+              <option key={v.id} value={v.placa}>
+                {v.placa} - {v.modelo}
+              </option>
+            ))}
+          </FormField>
 
-    <FormField
-      label="Motorista"
-      name="motorista"
-      as="select"
-      register={register}
-      error={errors.motorista}
-    >
-      <option value="">Selecione o motorista</option>
-      {motoristas.map((m) => (
-        <option key={m.id} value={m.nome}>
-          {m.nome}
-        </option>
-      ))}
-    </FormField>
+          <FormField
+            label="Motorista"
+            name="motorista"
+            as="select"
+            register={register}
+            error={errors.motorista}
+          >
+            <option value="">Selecione o motorista</option>
+            {motoristas.map((m) => (
+              <option key={m.id} value={m.nome}>
+                {m.nome}
+              </option>
+            ))}
+          </FormField>
 
-    <FormField
-      label="Fornecedor"
-      name="fornecedor"
-      as="select"
-      register={register}
-      error={errors.fornecedor}
-    >
-      <option value="">Selecione o fornecedor</option>
-      {fornecedores.map((f) => (
-        <option key={f.id} value={f.nome}>
-          {f.nome}
-        </option>
-      ))}
-    </FormField>
+          <FormField
+            label="Fornecedor"
+            name="fornecedor"
+            as="select"
+            register={register}
+            error={errors.fornecedor}
+          >
+            <option value="">Selecione o fornecedor</option>
+            {fornecedores.map((f) => (
+              <option key={f.id} value={f.nome}>
+                {f.nome}
+              </option>
+            ))}
+          </FormField>
 
-    <FormField
-      label="KM"
-      name="km"
-      type="number"
-      register={register}
-      error={errors.km}
-    />
+          <FormField
+            label="KM"
+            name="km"
+            type="number"
+            register={register}
+            error={errors.km}
+          />
 
-    <FormField
-      label="Data"
-      name="data"
-      type="date"
-      register={register}
-      error={errors.data}
-    />
+          <FormField
+            label="Data"
+            name="data"
+            type="date"
+            register={register}
+            error={errors.data}
+          />
 
-    <FormField
-      label="Litros"
-      name="litros"
-      type="number"
-      step="0.01"
-      register={register}
-      error={errors.litros}
-    />
+          <FormField
+            label="Litros"
+            name="litros"
+            type="number"
+            step="0.01"
+            register={register}
+            error={errors.litros}
+          />
 
-    <FormField
-      label="Valor do Litro"
-      name="valorLitro"
-      type="number"
-      step="0.01"
-      register={register}
-      error={errors.valorLitro}
-    />
+          <FormField
+            label="Valor do Litro"
+            name="valorLitro"
+            type="number"
+            step="0.01"
+            register={register}
+            error={errors.valorLitro}
+          />
 
-    <div style={{ width: "100%" }}>
-      <SubmitButton loading={isSubmitting}>
-        {editando ? "Atualizar" : "Cadastrar"}
-      </SubmitButton>
-    </div>
-  </Form>
-</Modal>
+          <div style={{ width: "100%" }}>
+            <SubmitButton loading={isSubmitting}>
+              {editando ? "Atualizar" : "Cadastrar"}
+            </SubmitButton>
+          </div>
+        </Form>
+      </Modal>
 
       <SearchInput
         value={busca}
@@ -351,9 +332,7 @@ const AbastecimentosList = () => {
           <ListItem
             key={a.id}
             title={`${a.placa} - ${a.motorista || "-"}`}
-            subtitle={`KM: ${a.km} |  Data: ${formatData(a.data)} | Litros: ${
-              a.litros
-            } | Valor litro: R$ ${a.valorLitro.toFixed(2)}`}
+            subtitle={`KM: ${a.km} |  Data: ${formatData(a.data)} | Litros: ${a.litros} | Valor litro: R$ ${a.valorLitro.toFixed(2)}`}
             onEdit={() => handleEdit(a)}
             onDelete={() => setConfirmarId(a.id)}
             style={{ marginBottom: "12px" }}
