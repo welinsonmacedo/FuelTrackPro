@@ -36,7 +36,9 @@ const menuItemStyle = (active) => ({
   backgroundColor: active ? "#34495e" : "transparent",
   textDecoration: "none",
   color: "#ecf0f1",
-  display: "block",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
 });
 
 const menuItemCollapsedStyle = (active) => ({
@@ -81,18 +83,20 @@ export default function Layout() {
     };
   }, [collapsed]);
 
- const menuItems = [
-  { to: "/dashboard", icon: "📊", label: "Dashboard" },       // gráfico, ok
-  { to: "/motoristas", icon: "👨‍✈️", label: "Motoristas" },   // motorista/piloto
-  { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" }, // bomba de combustível, ok
-  { to: "/veiculos", icon: "🚚", label: "Veículos" },          // caminhão
-  { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },   // ferramentas, ok
-  { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },   // prédio comercial, ok
-  { to: "/viagens", icon: "🛣️", label: "Viagens" },           // estrada
-  { to: "/medias", icon: "", label: "Medias" },           // estrada
-  { to: "/mediasreport", icon: "", label: "Medias Relato" },           // estrada
-  { to: "/notificacoes", icon: "🔔", label: "Notificações" },   // sino de notificações
-];
+  const menuItems = [
+    { to: "/dashboard", icon: "📊", label: "Dashboard" },
+    { to: "/motoristas", icon: "🧑‍✈️", label: "Motoristas" },
+    { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" },
+    { to: "/veiculos", icon: "🚛", label: "Veículos" },
+    { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },
+    { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },
+    { to: "/viagens", icon: "🛣️", label: "Viagens" },
+    { to: "/medias", icon: "📈", label: "Médias" },
+    { to: "/mediasreport", icon: "📄", label: "Relatório de Médias" },
+    { to: "/notificacoes", icon: "🔔", label: "Notificações" },
+    { to: "/usuario", icon: "👤", label: "Usuário" },
+  ];
+
   return (
     <>
       <aside style={sidebarStyle(collapsed)} ref={sidebarRef}>
@@ -118,7 +122,7 @@ export default function Layout() {
                 }
                 title={label}
               >
-                {icon} {collapsed ? "" : label}
+                {icon} {!collapsed && label}
               </Link>
             );
           })}

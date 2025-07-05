@@ -1,5 +1,5 @@
  
-import { useAuth } from '../contexts/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { registrarAuditoria } from '../services/auditoria';
 
 export function useAuditoria() {

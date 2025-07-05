@@ -1,7 +1,8 @@
-import { Navigate } from "react-router-dom";
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-export default function PrivateRoute({ allowedRoles, children }) {
+const RoleRoute = ({ allowedRoles }) => {
   const { usuario, tipoUsuario, loading } = useAuth();
 
   if (loading) return <p>Carregando...</p>;
@@ -15,5 +16,7 @@ export default function PrivateRoute({ allowedRoles, children }) {
     return <p>Acesso negado</p>;
   }
 
-  return children;
-}
+  return <Outlet />;
+};
+
+export default RoleRoute;

@@ -57,13 +57,7 @@ export default function MediasCalculadasPage() {
     fim: fimDate,
   });
 
-  const exportar = () => {
-    exportarParaCSV(
-      medias,
-      ["data", "placa", "motorista", "kmInicial", "kmFinal", "litros", "media"],
-      "medias_filtradas"
-    );
-  };
+
 
   const imprimirPDF = () => {
     const conteudo = `
@@ -197,7 +191,7 @@ export default function MediasCalculadasPage() {
           />
         </div>
 
-        <Button onClick={exportar}>Exportar CSV</Button>
+       
         <Button onClick={imprimirPDF} style={{ marginLeft: "10px" }}>
           Exportar PDF
         </Button>
