@@ -1,55 +1,84 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-export default function InputPassword({ label, value, onChange, error, placeholder, ...props }) {
+export default function InputPassword({ label, error, id = "password", ...props }) {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const toggleMostrarSenha = () => {
-    setMostrarSenha(!mostrarSenha);
+  // Estilos
+  const containerStyle = {
+    position: "relative",
+    width: "100%",
+    marginBottom: error ? 28 : 16, // espaço extra para erro
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "10px 40px 10px 12px", // espaço para o botão à direita
+    borderRadius: 6,
+    border: error ? "2px solid #e74c3c" : "1px solid #ccc",
+    fontSize: 16,
+    outline: "none",
+    transition: "border-color 0.3s",
+    boxSizing: "border-box",
+  };
+
+  const toggleButtonStyle = {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: 18,
+    color: "#666",
+    padding: 4,
+    userSelect: "none",
+  };
+
+  const errorStyle = {
+    color: "#e74c3c",
+    fontSize: 14,
+    marginTop: 4,
+    display: "block",
+    position: "absolute",
+    bottom: -20,
+    left: 0,
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: 6,
+    fontWeight: "bold",
   };
 
   return (
-    <div style={{ marginBottom: "1rem", width: "100%", maxWidth: "300px", position: "relative" }}>
-      {label && <label style={{ display: "block", marginBottom: "0.3rem" }}>{label}</label>}
+    <div style={containerStyle}>
+      {label && (
+        <label htmlFor={id} style={labelStyle}>
+          {label}
+        </label>
+      )}
       <input
+        id={id}
         type={mostrarSenha ? "text" : "password"}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        style={{
-          width: "100%",
-          padding: "0.6rem 2.5rem 0.6rem 0.8rem", // espaço para o ícone
-          border: error ? "2px solid #dc2626" : "1px solid #ccc",
-          borderRadius: "4px",
-          fontSize: "1rem",
-          outline: "none",
-          boxShadow: error ? "0 0 5px rgba(220, 38, 38, 0.5)" : "none",
-          transition: "border-color 0.3s ease",
-        }}
         {...props}
+        style={inputStyle}
+        aria-invalid={error ? "true" : "false"}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
-      <span
-        onClick={toggleMostrarSenha}
-        style={{
-          position: "absolute",
-          right: "10px",
-          top: "30%",
-          transform: "translateY(-50%)",
-          cursor: "pointer",
-          userSelect: "none",
-          color: "#555",
-          fontSize: "1.2rem",
-          fontWeight: "bold",
-          opacity: 0.7,
-        }}
+      <button
+        type="button"
+        onClick={() => setMostrarSenha(!mostrarSenha)}
         aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") toggleMostrarSenha();
-        }}
+        style={toggleButtonStyle}
       >
         {mostrarSenha ? "🙈" : "👁️"}
-      </span>
+      </button>
+      {error && (
+        <span id={`${id}-error`} role="alert" style={errorStyle}>
+          {typeof error === "string" ? error : "Campo inválido"}
+        </span>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { useNavigate } from "react-router-dom";
+import Home from "./Home";
 
 export default function Dashboard() {
   const { usuario } = useAuth();
@@ -22,9 +23,7 @@ export default function Dashboard() {
     <div style={{ padding: "20px" }}>
       <h1>Bem-vindo, {usuario?.email}</h1>
       <p>Este é seu dashboard do FuelTrack.</p>
-      <button onClick={handleLogout} style={{ marginTop: "20px" }}>
-        Sair
-      </button>
+      <Home/>
     </div>
   );
 }

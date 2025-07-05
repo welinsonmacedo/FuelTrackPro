@@ -20,6 +20,7 @@ const UsuarioPage = () => {
       <button style={styles.logoutButton} onClick={logout}>
         Sair da Conta
       </button>
+      
     </div>
   );
 };

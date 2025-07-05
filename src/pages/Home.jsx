@@ -1,8 +1,43 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Card from "../components/Card";
 import colors from "../styles/colors";
+import { useMediasCalculadas } from "../hooks/useMediasCalculadas";
+import { useViagens } from "../hooks/useViagens";
+import { useAlertasPendentes } from "../hooks/useAlertasPendentes";
 
 const Home = ({ usuario }) => {
+  // Usa o hook passando filtro do usuário (exemplo: motorista)
+  const { medias, loading: loadingMedias } = useMediasCalculadas({
+    motorista: usuario?.id,
+  });
+
+  // Assume que useViagens também aceita filtro por usuário (motorista)
+  const { viagens, loading: loadingViagens } = useViagens({
+    motoristaId: usuario?.id,
+  });
+
+  // Passa o id do usuário para buscar alertas pendentes
+  const { alertasCount, loading: loadingAlertas } = useAlertasPendentes(usuario?.id);
+
+  // Calcula o consumo médio do usuário
+  const consumoMedio = useMemo(() => {
+    if (loadingMedias || !medias.length) return "...";
+    // Pega a primeira média (ou ajuste conforme seu modelo)
+    const mediaUsuario = medias[0];
+    return mediaUsuario?.consumoMedio
+      ? `${mediaUsuario.consumoMedio.toFixed(2)} km/l`
+      : "N/D";
+  }, [medias, loadingMedias]);
+
+  // Pega as últimas 5 viagens do usuário
+  const viagensRecentes = useMemo(() => {
+    if (loadingViagens || !viagens.length) return [];
+    const userViagens = viagens
+      .filter((v) => v.motoristaId === usuario?.id)
+      .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
+    return userViagens.slice(0, 5);
+  }, [viagens, loadingViagens, usuario]);
+
   return (
     <div
       style={{
@@ -22,72 +57,26 @@ const Home = ({ usuario }) => {
             title="Consumo Médio"
             style={{ backgroundColor: colors.primaryDark, color: colors.background, flex: 1 }}
           >
-            12,5 km/l
+            {loadingMedias ? "Carregando..." : consumoMedio}
           </Card>
 
           <Card
             title="Viagens Recentes"
             style={{ backgroundColor: colors.accent, color: colors.background, flex: 1 }}
           >
-            5 concluídas
+            {loadingViagens ? "Carregando..." : `${viagensRecentes.length} concluídas`}
           </Card>
 
           <Card
             title="Alertas"
             style={{ backgroundColor: colors.success, color: colors.background, flex: 1 }}
           >
-            0 pendentes
+            {loadingAlertas ? "Carregando..." : `${alertasCount} pendentes`}
           </Card>
         </div>
       </section>
 
-      <section style={{ marginTop: 40 }}>
-        <h2>Principais Ações</h2>
-        <div style={{ display: "flex", gap: 15, marginTop: 10 }}>
-          <button
-            style={{
-              flex: 1,
-              padding: "15px",
-              backgroundColor: colors.primary,
-              color: colors.background,
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            Nova Viagem
-          </button>
-          <button
-            style={{
-              flex: 1,
-              padding: "15px",
-              backgroundColor: colors.primaryDark,
-              color: colors.background,
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            Abastecimentos
-          </button>
-          <button
-            style={{
-              flex: 1,
-              padding: "15px",
-              backgroundColor: colors.accent,
-              color: colors.background,
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            Relatórios
-          </button>
-        </div>
-      </section>
+      {/* Você pode mostrar detalhes das viagens recentes aqui */}
     </div>
   );
 };

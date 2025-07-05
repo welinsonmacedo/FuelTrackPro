@@ -53,3 +53,122 @@
     margin-bottom: 0;
   }
 }
+.botoes-navegacao {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.botoes-navegacao button {
+  padding: 10px 16px;
+  border: none;
+  background-color: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.botoes-navegacao button.ativo {
+  background-color: #2c3e50;
+  color: white;
+}
+.menu-mobile {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.menu-toggle {
+  background-color: #2c3e50;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu-opcoes {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  width: 180px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border-radius: 6px;
+  z-index: 1000;
+}
+
+.menu-opcoes button {
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.menu-opcoes button:hover,
+.menu-opcoes button.ativo {
+  background-color: #3498db;
+  color: white;
+}
+.topo-motorista {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.logout-button {
+  background-color: #e74c3c;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+.menu-mobile {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.menu-toggle {
+  background-color: #2c3e50;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu-opcoes {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  width: 180px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border-radius: 6px;
+  z-index: 1000;
+}
+
+.menu-opcoes button {
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.menu-opcoes button:hover,
+.menu-opcoes button.ativo {
+  background-color: #3498db;
+  color: white;
+}

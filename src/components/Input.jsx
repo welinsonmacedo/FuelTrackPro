@@ -1,6 +1,6 @@
 export default function Input({ label, type = "text", value, onChange, error, ...props }) {
   return (
-    <div style={{ marginBottom: '0.3rem', width: '100%', maxWidth: '300px' }}>
+    <div style={{ marginBottom: '0.3rem', width: '270px' }}>
       {label && <label style={{ display: 'block', marginBottom: '0.3rem' }}>{label}</label>}
       <input
         type={type}

@@ -3,16 +3,16 @@ import { useManutencoes } from "../hooks/useManutencoes";
 import { useAbastecimentos } from "../hooks/useAbastecimentos";
 import { useTiposManutencao } from "../hooks/useTiposManutencao";
 import { formatData } from "../utils/data";
-import { useNavigate } from "react-router-dom"; // Importa o hook de navegação
+import { useNavigate } from "react-router-dom";
 
 const Notificacoes = () => {
   const { manutencoes } = useManutencoes();
   const { abastecimentos } = useAbastecimentos();
-  const { tipos } = useTiposManutencao(); // pegando só os tipos
+  const { tipos } = useTiposManutencao();
 
   const hoje = new Date();
   const navigate = useNavigate();
-  // Função para obter último km abastecido do veículo
+
   function getUltimoKm(placa) {
     const doVeiculo = abastecimentos
       .filter((a) => a.placa === placa)
@@ -24,7 +24,6 @@ const Notificacoes = () => {
     return Number(doVeiculo[0]?.kmAbastecimento || doVeiculo[0]?.km || 0);
   }
 
-  // Função para buscar o tipo completo pelo nome no estado tipos
   function buscarTipoManutencao(nomeTipo) {
     if (!tipos) return null;
     return tipos.find((t) => t.nome === nomeTipo) || null;
@@ -56,7 +55,10 @@ const Notificacoes = () => {
       alertaKm = diffKm <= kmAntecedencia && diffKm >= 0;
     }
 
-    return alertaData || alertaKm;
+    // Também inclui quando já passou do km e manutenção não foi feita (atraso)
+    const atrasoKm = m.proximaRevisaoKm !== undefined && ultimoKm > m.proximaRevisaoKm;
+
+    return alertaData || alertaKm || atrasoKm;
   });
 
   return (
@@ -78,23 +80,30 @@ const Notificacoes = () => {
             ? m.proximaRevisaoKm - kmAtual
             : null;
 
+          // Verifica se está atrasado (KM atual > KM revisão)
+          const estaAtrasadoKm = m.proximaRevisaoKm !== undefined && kmAtual > m.proximaRevisaoKm;
+
+          // Estilo baseado no atraso
+          const estiloAlerta = {
+            borderRadius: "8px",
+            padding: "1rem",
+            marginBottom: "1rem",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            cursor: "pointer",
+            border: estaAtrasadoKm ? "1.5px solid #e74c3c" : "1px solid #f39c12",
+            backgroundColor: estaAtrasadoKm ? "#fdecea" : "#fffaf3",
+          };
+
           return (
             <div
               key={m.id}
-              style={{
-                border: "1px solid #f39c12",
-                borderRadius: "8px",
-                padding: "1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#fffaf3",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                cursor: "pointer",
-              }}
-              onClick={() => navigate(`/manutencoes`)} // Navega para a página de manutenção passando o id
+              style={estiloAlerta}
+              onClick={() => navigate(`/manutencoes`)}
               title="Clique para ver detalhes da manutenção"
             >
-              <h3 style={{ marginBottom: "0.5rem" }}>
+              <h3 style={{ marginBottom: "0.5rem", color: estaAtrasadoKm ? "#e74c3c" : "inherit" }}>
                 🚗 {m.placa} - {tipoCompleto?.nome || "Tipo não informado"}
+                {estaAtrasadoKm && " (ATRAZADO)"}
               </h3>
               <p>
                 <b>Fornecedor:</b> {m.fornecedor || "-"} <br />

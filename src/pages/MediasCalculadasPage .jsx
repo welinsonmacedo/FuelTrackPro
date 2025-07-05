@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useMediasCalculadas } from "../hooks/useMediasCalculadas";
 import { formatData } from "../utils/data";
-import { exportarParaCSV } from "../utils/exportCsv";
 import { SearchInput } from "../components/SearchInput";
 import Card from "../components/Card";
 import Button from "../components/Button";
@@ -57,8 +56,6 @@ export default function MediasCalculadasPage() {
     fim: fimDate,
   });
 
-
-
   const imprimirPDF = () => {
     const conteudo = `
       <html>
@@ -100,27 +97,30 @@ export default function MediasCalculadasPage() {
                 <th>Motorista</th>
                 <th>KM Inicial</th>
                 <th>KM Final</th>
+                <th>KM Rodado</th>
                 <th>Litros</th>
                 <th>Média (km/l)</th>
               </tr>
             </thead>
-            <tbody>
-              ${medias
-                .map(
-                  (m) => `
-                <tr>
-                  <td>${formatData(m.data)}</td>
-                  <td>${m.placa}</td>
-                  <td>${m.motorista}</td>
-                  <td>${m.kmInicial}</td>
-                  <td>${m.kmFinal}</td>
-                  <td>${m.litros}</td>
-                  <td>${m.media}</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
+           <tbody>
+  ${medias
+    .map((m) => {
+      const kmRodado = m.kmFinal - m.kmInicial;
+      return `
+        <tr>
+          <td>${formatData(m.data)}</td>
+          <td>${m.placa}</td>
+          <td>${m.motorista}</td>
+          <td>${m.kmInicial}</td>
+          <td>${m.kmFinal}</td>
+          <td>${kmRodado}</td>
+          <td>${m.litros.toFixed(2)} L</td> <!-- litros com 2 decimais -->
+          <td>${m.media.toFixed(2)} km/l</td>
+        </tr>
+      `;
+    })
+    .join("")}
+</tbody>
           </table>
         </body>
       </html>
@@ -191,7 +191,6 @@ export default function MediasCalculadasPage() {
           />
         </div>
 
-       
         <Button onClick={imprimirPDF} style={{ marginLeft: "10px" }}>
           Exportar PDF
         </Button>
@@ -202,21 +201,28 @@ export default function MediasCalculadasPage() {
       ) : medias.length === 0 ? (
         <p>Nenhuma média encontrada.</p>
       ) : (
-        medias.map((m) => (
-          <Card key={m.id} style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: "700", fontSize: 16, marginBottom: 4 }}>
-              {m.motorista} — {m.placa}
-            </div>
-            <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
-              Data: {formatData(m.data)}
-            </div>
-            <div>
-              <strong>Média:</strong> {m.media} km/l &nbsp;|&nbsp;
-              <strong> KM:</strong> {m.kmInicial} → {m.kmFinal} &nbsp;|&nbsp;
-              <strong> Litros:</strong> {m.litros}
-            </div>
-          </Card>
-        ))
+        medias.map((m) => {
+          const kmRodado = m.kmFinal - m.kmInicial;
+          return (
+            <Card key={m.id} style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: "700", fontSize: 16, marginBottom: 4 }}>
+                {m.motorista} — {m.placa}
+              </div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+                Data: {formatData(m.data)}
+              </div>
+              <div>
+                <div>
+                 
+                  <strong>Média:</strong> {m.media.toFixed(2)} km/l &nbsp;|&nbsp;
+                  <strong>Litros:</strong> {m.litros.toFixed(2)} L &nbsp;|&nbsp;
+                  <strong>KM:</strong> {m.kmInicial} → {m.kmFinal}&nbsp;|&nbsp;
+                   <strong>KM Rodado:</strong> {kmRodado} km 
+                </div>
+              </div>
+            </Card>
+          );
+        })
       )}
     </div>
   );

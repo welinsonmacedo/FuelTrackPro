@@ -1,4 +1,3 @@
-// hooks/useMediasCalculadas.js
 import { useState, useEffect } from "react";
 import { db } from "../services/firebase";
 import {
@@ -18,18 +17,18 @@ export function useMediasCalculadas({ placa, motorista, inicio, fim }) {
       setLoading(true);
       try {
         const col = collection(db, "medias");
-        let q = query(col);
-
         const filtros = [];
+
         if (placa) filtros.push(where("placa", "==", placa));
         if (motorista) filtros.push(where("motorista", "==", motorista));
-        if (inicio && fim)
-          filtros.push(
-            where("data", ">=", Timestamp.fromDate(inicio)),
-            where("data", "<=", Timestamp.fromDate(fim))
-          );
 
-        q = query(col, ...filtros);
+        // Para filtro de data, Firestore requer um range entre >= inicio e <= fim
+        if (inicio && fim) {
+          filtros.push(where("data", ">=", Timestamp.fromDate(inicio)));
+          filtros.push(where("data", "<=", Timestamp.fromDate(fim)));
+        }
+
+        const q = query(col, ...filtros);
 
         const snapshot = await getDocs(q);
         const lista = snapshot.docs.map((doc) => ({

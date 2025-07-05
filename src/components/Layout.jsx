@@ -95,6 +95,7 @@ export default function Layout() {
     { to: "/mediasreport", icon: "📄", label: "Relatório de Médias" },
     { to: "/notificacoes", icon: "🔔", label: "Notificações" },
     { to: "/usuario", icon: "👤", label: "Usuário" },
+    { to: "/admin/configuracoes", icon: "👤", label: "Configurações" },
   ];
 
   return (

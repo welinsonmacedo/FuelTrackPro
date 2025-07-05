@@ -16,7 +16,7 @@ import { formatarPeriodo, formatData } from "../utils/data";
 import { db } from "../services/firebase";
 import { SearchInput } from "../components/SearchInput";
 
-const ViagensList = () => {
+const ViagensList = ({ mostrarCadastrar = true }) => {
   const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
@@ -28,15 +28,12 @@ const ViagensList = () => {
   const [confirmarId, setConfirmarId] = useState(null);
   const [viagemParaVincular, setViagemParaVincular] = useState(null);
 
-  // Função para limpar strings para comparação
   const clean = (str) => (str || "").toString().toLowerCase().trim();
 
-  // Filtro das viagens conforme busca
   const filtrados = viagens.filter((v) => {
     const buscaLower = busca.toLowerCase();
     const placa = typeof v.placa === "string" ? v.placa.toLowerCase() : "";
     const motorista = typeof v.motorista === "string" ? v.motorista.toLowerCase() : "";
-    // Usa rota para mostrar destino, se disponível
     const destino = typeof v.rota === "string" ? v.rota.toLowerCase() : "";
     return (
       placa.includes(buscaLower) ||
@@ -45,7 +42,6 @@ const ViagensList = () => {
     );
   });
 
-  // React Hook Form com validação Yup
   const {
     register,
     handleSubmit,
@@ -53,7 +49,6 @@ const ViagensList = () => {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: yupResolver(viagensSchema) });
 
-  // Listas únicas para selects (placas e motoristas)
   const placasDisponiveis = [
     ...new Set(
       abastecimentos
@@ -69,7 +64,6 @@ const ViagensList = () => {
     ),
   ];
 
-  // Reset do formulário quando abrir/fechar modal e preencher edição
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
@@ -90,17 +84,14 @@ const ViagensList = () => {
     }
   }, [mostrarForm, editando, reset]);
 
-  // Abrir cadastro
   const abrirCadastro = () => {
     setEditando(null);
     setTituloForm("Cadastro");
     setMostrarForm(true);
   };
 
-  // Fechar modal cadastro
   const fecharModal = () => setMostrarForm(false);
 
-  // Envio do formulário (adicionar ou editar viagem)
   const onSubmit = async (dados) => {
     try {
       const dadosFormatados = {
@@ -121,31 +112,25 @@ const ViagensList = () => {
     }
   };
 
-  // Editar viagem (abre modal com dados)
   const handleEdit = (item) => {
     setEditando(item);
     setTituloForm("Editar");
     setMostrarForm(true);
   };
 
-  // Confirmar exclusão
   const handleConfirmDelete = async () => {
     await excluirViagem(confirmarId);
     setConfirmarId(null);
   };
 
-  // Abastecimentos vinculados à viagem selecionada
   const abastecimentosVinculados = useMemo(() => {
     if (!viagemParaVincular) return [];
     return abastecimentos.filter((ab) => ab.viagemId === viagemParaVincular.id);
   }, [viagemParaVincular, abastecimentos]);
 
-  // Abastecimentos disponíveis para vincular (sem viagemId e que atendam critérios)
   const abastecimentosDisponiveis = useMemo(() => {
     if (!viagemParaVincular) return [];
     const { placa, motorista, dataInicio, dataFim } = viagemParaVincular;
-
-    // Converter timestamps para Date
     const dtInicio = dataInicio?.toDate ? dataInicio.toDate() : new Date(dataInicio);
     const dtFim = dataFim?.toDate ? dataFim.toDate() : new Date(dataFim);
 
@@ -166,7 +151,6 @@ const ViagensList = () => {
     });
   }, [viagemParaVincular, abastecimentos]);
 
-  // Vincular abastecimento a viagem
   const vincularAbastecimento = async (abastecimento) => {
     if (!viagemParaVincular?.id) return;
     try {
@@ -176,14 +160,13 @@ const ViagensList = () => {
         atualizadoEm: new Date(),
       });
       alert("Abastecimento vinculado com sucesso!");
-      setViagemParaVincular((v) => ({ ...v })); // força re-render do modal
+      setViagemParaVincular((v) => ({ ...v }));
     } catch (err) {
       console.error("Erro ao vincular abastecimento:", err);
       alert("Erro ao vincular abastecimento.");
     }
   };
 
-  // Desvincular abastecimento da viagem
   const desvincularAbastecimento = async (abastecimento) => {
     try {
       const abastecimentoRef = doc(db, "abastecimentos", abastecimento.id);
@@ -192,7 +175,7 @@ const ViagensList = () => {
         atualizadoEm: new Date(),
       });
       alert("Abastecimento desvinculado com sucesso!");
-      setViagemParaVincular((v) => ({ ...v })); // força re-render do modal
+      setViagemParaVincular((v) => ({ ...v }));
     } catch (err) {
       console.error("Erro ao desvincular abastecimento:", err);
       alert("Erro ao desvincular abastecimento.");
@@ -213,23 +196,25 @@ const ViagensList = () => {
     >
       <h2 style={{ marginBottom: "20px" }}>Viagens</h2>
 
-      <button
-        onClick={abrirCadastro}
-        style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          backgroundColor: "#3498db",
-          color: "#fff",
-          borderRadius: "6px",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Cadastrar Viagem
-      </button>
+      {/* Botão Cadastrar, visível só se mostrarCadastrar for true */}
+      {mostrarCadastrar && (
+        <button
+          onClick={abrirCadastro}
+          style={{
+            marginBottom: "20px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            backgroundColor: "#3498db",
+            color: "#fff",
+            borderRadius: "6px",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Cadastrar Viagem
+        </button>
+      )}
 
-      {/* Modal de cadastro/edição */}
       <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Viagem`}>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField label="Placa" name="placa" as="select" register={register} error={errors.placa}>
@@ -267,7 +252,6 @@ const ViagensList = () => {
         </Form>
       </Modal>
 
-      {/* Input de busca */}
       <SearchInput
         type="text"
         placeholder="Buscar viagens..."
@@ -284,7 +268,6 @@ const ViagensList = () => {
         }}
       />
 
-      {/* Lista de viagens */}
       <div>
         {filtrados.map((v) => (
           <ListItem
@@ -294,8 +277,8 @@ const ViagensList = () => {
               v.dataInicio,
               v.dataFim
             )}`}
-            onEdit={() => handleEdit(v)}
-            onDelete={() => setConfirmarId(v.id)}
+            onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
+            onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
             actions={[
               {
                 label: "Vincular",
@@ -307,7 +290,6 @@ const ViagensList = () => {
         ))}
       </div>
 
-      {/* Confirm dialog para exclusão */}
       {confirmarId && (
         <ConfirmDialog
           title="Excluir viagem"
@@ -317,7 +299,6 @@ const ViagensList = () => {
         />
       )}
 
-      {/* Modal Vincular Abastecimentos */}
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
