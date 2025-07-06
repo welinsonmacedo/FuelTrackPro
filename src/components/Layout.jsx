@@ -178,6 +178,7 @@ export default function Layout() {
         { to: "/medias", label: "Médias" },
         { to: "/mediasreport", label: "Relatório de Médias" },
         { to: "/medias-mes", label: " Médias Mês" },
+        { to: "/check-list", label: " Check-List" },
         { to: "/notificacoes", label: "Notificações" },
       ],
     },

@@ -26,6 +26,7 @@ import AdminRoutes from "./routes/AdminRoutes";
 import Licenca from "./pages/Licenca";
 import Logs from "./pages/Logs";
 import MediaGeralPorMesPage from "./pages/MediaGeralPorMesPage";
+import ChecklistPage from "./pages/ChecklistPage";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -85,6 +86,7 @@ return (
       <Route path="mediasreport" element={<MediasCalculadasPage />} />
       <Route path="usuario" element={<UsuarioPage />} />
       <Route path="medias-mes" element={<MediaGeralPorMesPage/>} />
+      <Route path="check-list" element={<ChecklistPage/>} />
     </Route>
 
     {/* Admin Routes separadas com layout próprio (caso queira reutilizar o Layout) */}

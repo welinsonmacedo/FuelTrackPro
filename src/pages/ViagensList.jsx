@@ -15,9 +15,11 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatarPeriodo, formatData } from "../utils/data";
 import { db } from "../services/firebase";
 import { SearchInput } from "../components/SearchInput";
+import ChecklistViagem from "./ChecklistViagem"; // novo
 
 const ViagensList = ({ mostrarCadastrar = true }) => {
-  const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
+  const { viagens, adicionarViagem, editarViagem, excluirViagem } =
+    useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
 
@@ -27,18 +29,18 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
   const [viagemParaVincular, setViagemParaVincular] = useState(null);
+  const [viagemChecklist, setViagemChecklist] = useState(null); // novo
 
   const clean = (str) => (str || "").toString().toLowerCase().trim();
 
   const filtrados = viagens.filter((v) => {
     const buscaLower = busca.toLowerCase();
-    const placa = typeof v.placa === "string" ? v.placa.toLowerCase() : "";
-    const motorista = typeof v.motorista === "string" ? v.motorista.toLowerCase() : "";
-    const destino = typeof v.rota === "string" ? v.rota.toLowerCase() : "";
+   
     return (
-      placa.includes(buscaLower) ||
-      motorista.includes(buscaLower) ||
-      destino.includes(buscaLower)
+      clean(v.placa).includes(buscaLower) ||
+      clean(v.motorista).includes(buscaLower) ||
+      clean(v.rota).includes(buscaLower)
+      
     );
   });
 
@@ -50,18 +52,10 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   } = useForm({ resolver: yupResolver(viagensSchema) });
 
   const placasDisponiveis = [
-    ...new Set(
-      abastecimentos
-        .map((ab) => ab.placa)
-        .filter((p) => typeof p === "string" && p.trim() !== "")
-    ),
+    ...new Set(abastecimentos.map((ab) => ab.placa).filter(Boolean)),
   ];
   const motoristasDisponiveis = [
-    ...new Set(
-      abastecimentos
-        .map((ab) => ab.motorista)
-        .filter((m) => typeof m === "string" && m.trim() !== "")
-    ),
+    ...new Set(abastecimentos.map((ab) => ab.motorista).filter(Boolean)),
   ];
 
   useEffect(() => {
@@ -131,7 +125,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   const abastecimentosDisponiveis = useMemo(() => {
     if (!viagemParaVincular) return [];
     const { placa, motorista, dataInicio, dataFim } = viagemParaVincular;
-    const dtInicio = dataInicio?.toDate ? dataInicio.toDate() : new Date(dataInicio);
+    const dtInicio = dataInicio?.toDate
+      ? dataInicio.toDate()
+      : new Date(dataInicio);
     const dtFim = dataFim?.toDate ? dataFim.toDate() : new Date(dataFim);
 
     return abastecimentos.filter((ab) => {
@@ -196,7 +192,6 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     >
       <h2 style={{ marginBottom: "20px" }}>Viagens</h2>
 
-      {/* Botão Cadastrar, visível só se mostrarCadastrar for true */}
       {mostrarCadastrar && (
         <button
           onClick={abrirCadastro}
@@ -215,9 +210,19 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         </button>
       )}
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Viagem`}>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Viagem`}
+      >
         <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormField label="Placa" name="placa" as="select" register={register} error={errors.placa}>
+          <FormField
+            label="Placa"
+            name="placa"
+            as="select"
+            register={register}
+            error={errors.placa}
+          >
             <option value="">Selecione a placa</option>
             {placasDisponiveis.map((placa) => (
               <option key={placa} value={placa}>
@@ -226,7 +231,13 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             ))}
           </FormField>
 
-          <FormField label="Motorista" name="motorista" as="select" register={register} error={errors.motorista}>
+          <FormField
+            label="Motorista"
+            name="motorista"
+            as="select"
+            register={register}
+            error={errors.motorista}
+          >
             <option value="">Selecione o motorista</option>
             {motoristasDisponiveis.map((motorista) => (
               <option key={motorista} value={motorista}>
@@ -235,7 +246,13 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             ))}
           </FormField>
 
-          <FormField label="Destino (Rota)" name="rota" as="select" register={register} error={errors.rota}>
+          <FormField
+            label="Destino (Rota)"
+            name="rota"
+            as="select"
+            register={register}
+            error={errors.rota}
+          >
             <option value="">Selecione a rota</option>
             {rotas.map((rota) => (
               <option key={rota.id} value={rota.sigla}>
@@ -244,11 +261,31 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             ))}
           </FormField>
 
-          <FormField label="Data Início" name="dataInicio" type="date" register={register} error={errors.dataInicio} />
-          <FormField label="Data Fim" name="dataFim" type="date" register={register} error={errors.dataFim} />
-          <FormField label="KM" name="km" type="number" register={register} error={errors.km} />
+          <FormField
+            label="Data Início"
+            name="dataInicio"
+            type="date"
+            register={register}
+            error={errors.dataInicio}
+          />
+          <FormField
+            label="Data Fim"
+            name="dataFim"
+            type="date"
+            register={register}
+            error={errors.dataFim}
+          />
+          <FormField
+            label="KM"
+            name="km"
+            type="number"
+            register={register}
+            error={errors.km}
+          />
 
-          <SubmitButton loading={isSubmitting}>{editando ? "Atualizar" : "Cadastrar"}</SubmitButton>
+          <SubmitButton loading={isSubmitting}>
+            {editando ? "Atualizar" : "Cadastrar"}
+          </SubmitButton>
         </Form>
       </Modal>
 
@@ -270,20 +307,39 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
       <div>
         {filtrados.map((v) => (
+  
           <ListItem
             key={v.id}
             title={`${v.placa} - ${v.motorista}`}
-            subtitle={`Destino: ${v.rota || ""} | KM: ${v.km} | Período: ${formatarPeriodo(
-              v.dataInicio,
-              v.dataFim
-            )}`}
+            subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(v.dataInicio, v.dataFim)}`}
             onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
             onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
             actions={[
               {
                 label: "Vincular",
                 onClick: () => setViagemParaVincular(v),
-                style: { backgroundColor: "#28a745", border: "1px solid #28a745" },
+                style: {
+                  backgroundColor: "#28a745",
+                  border: "1px solid #28a745",
+                },
+              },
+              
+              {
+                label: "Checklist Início",
+                onClick: () =>
+                  setViagemChecklist({ viagem: v, tipo: "inicio" }),
+                style: {
+                  backgroundColor: "#f39c12",
+                  border: "1px solid #f39c12",
+                },
+              },
+              {
+                label: "Checklist Fim",
+                onClick: () => setViagemChecklist({ viagem: v, tipo: "fim" }),
+                style: {
+                  backgroundColor: "#8e44ad",
+                  border: "1px solid #8e44ad",
+                },
               },
             ]}
           />
@@ -302,13 +358,22 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
-        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
+        title={`Vincular Abastecimentos - Viagem ${
+          viagemParaVincular?.placa || ""
+        }`}
       >
         <div>
           <h3>Abastecimentos disponíveis para vincular:</h3>
           {abastecimentosDisponiveis.length > 0 ? (
             abastecimentosDisponiveis.map((ab) => (
-              <div key={ab.id} style={{ padding: "8px", border: "1px solid #ccc", marginBottom: "8px" }}>
+              <div
+                key={ab.id}
+                style={{
+                  padding: "8px",
+                  border: "1px solid #ccc",
+                  marginBottom: "8px",
+                }}
+              >
                 <div>Data: {formatData(ab.data)}</div>
                 <div>Litros: {ab.litros}</div>
                 <div>KM: {ab.km}</div>
@@ -375,6 +440,24 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
           )}
         </div>
       </Modal>
+
+      {viagemChecklist && (
+        <Modal
+          isOpen={true}
+          onClose={() => setViagemChecklist(null)}
+          title={`Checklist de ${
+            viagemChecklist.tipo === "inicio" ? "Início" : "Fim"
+          } - ${viagemChecklist.viagem?.placa}`}
+        >
+          <ChecklistViagem
+            tipo={viagemChecklist.tipo}
+             rota={viagemChecklist.viagem.rota}    
+            placa={viagemChecklist.viagem.placa}
+            motorista={viagemChecklist.viagem.motorista}
+            onClose={() => setViagemChecklist(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

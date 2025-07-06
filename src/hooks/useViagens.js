@@ -22,11 +22,11 @@ export const useViagens = () => {
         id: doc.id,
         placa: data.placa ?? "",
         motorista: data.motorista ?? "",
-        destino: data.destino ?? "",
+        rota: data.rota ?? "",
         km: data.km ?? 0,
         dataInicio: data.dataInicio ?? "",
         dataFim: data.dataFim ?? "",
-        // outros campos que usar
+        
       };
     });
 

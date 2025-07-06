@@ -13,7 +13,12 @@ export const ListItem = ({ title, subtitle, onEdit, onDelete, actions = [] }) =>
     }}
   >
     <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{title}</h3>
-    <p style={{ margin: '0 0 12px 0', color: '#555', fontSize: '14px' }}>{subtitle}</p>
+    <p
+  style={{ margin: '0 0 12px 0', color: '#555', fontSize: '14px' }}
+  // Se quiser aceitar JSX e manter o estilo, use:
+>
+  {typeof subtitle === 'string' ? subtitle : subtitle}
+</p>
     <div
       style={{
         display: 'flex',
