@@ -1,29 +1,34 @@
-/* eslint-disable no-unused-vars */
-import React from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { signOut } from "firebase/auth";
-import { auth } from "../services/firebase";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../services/firebase";
+import Logo from "../components/Logo";
 import Home from "./Home";
 
 export default function Dashboard() {
-  const { usuario } = useAuth();
-  const navigate = useNavigate();
+  const [logotipoBase64, setLogotipoBase64] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/login");
-    } catch (error) {
-      alert("Erro ao sair. Tente novamente.");
+  useEffect(() => {
+    async function fetchEmpresa() {
+      setLoading(true);
+      const empresaDoc = doc(db, "configs", "empresa");
+      const docSnap = await getDoc(empresaDoc);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("Dados empresa:", data); // Verifica no console
+        setLogotipoBase64(data.logotipoBase64 || null);
+      }
+      setLoading(false);
     }
-  };
+    fetchEmpresa();
+  }, []);
+
+  if (loading) return <p>Carregando dados da empresa...</p>;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Bem-vindo, {usuario?.email}</h1>
-      <p>Este é seu dashboard do FuelTrack.</p>
-      <Home/>
+      <Home />
+      <Logo src={logotipoBase64}  alt="Logotipo da Empresa" />
     </div>
   );
 }

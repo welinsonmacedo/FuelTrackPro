@@ -3,40 +3,47 @@ import Card from "../components/Card";
 import colors from "../styles/colors";
 import { useMediasCalculadas } from "../hooks/useMediasCalculadas";
 import { useViagens } from "../hooks/useViagens";
-import { useAlertasPendentes } from "../hooks/useAlertasPendentes";
+import { useAlertasManutencao } from "../hooks/useAlertasPendentes";
 
 const Home = ({ usuario }) => {
-  // Usa o hook passando filtro do usuário (exemplo: motorista)
-  const { medias, loading: loadingMedias } = useMediasCalculadas({
-    motorista: usuario?.id,
-  });
+  const { medias, loading: loadingMedias } = useMediasCalculadas({});
+  const { viagens, loading: loadingViagens } = useViagens();
+  const alertas = useAlertasManutencao();
 
-  // Assume que useViagens também aceita filtro por usuário (motorista)
-  const { viagens, loading: loadingViagens } = useViagens({
-    motoristaId: usuario?.id,
-  });
+ const consumoMedio = useMemo(() => {
+  if (loadingMedias || !medias.length) return "...";
 
-  // Passa o id do usuário para buscar alertas pendentes
-  const { alertasCount, loading: loadingAlertas } = useAlertasPendentes(usuario?.id);
+  // Somar todas as médias válidas
+  const somaMedias = medias.reduce((acc, item) => {
+    return acc + (typeof item.media === "number" ? item.media : 0);
+  }, 0);
 
-  // Calcula o consumo médio do usuário
-  const consumoMedio = useMemo(() => {
-    if (loadingMedias || !medias.length) return "...";
-    // Pega a primeira média (ou ajuste conforme seu modelo)
-    const mediaUsuario = medias[0];
-    return mediaUsuario?.consumoMedio
-      ? `${mediaUsuario.consumoMedio.toFixed(2)} km/l`
-      : "N/D";
-  }, [medias, loadingMedias]);
+  // Contar quantas médias são números válidos
+  const quantidadeValidos = medias.filter(item => typeof item.media === "number").length;
 
-  // Pega as últimas 5 viagens do usuário
+  if (quantidadeValidos === 0) return "N/D";
+
+  const mediaFinal = somaMedias / quantidadeValidos;
+
+  return `${mediaFinal.toFixed(2)} km/l`;
+}, [medias, loadingMedias]);
+
+
   const viagensRecentes = useMemo(() => {
-    if (loadingViagens || !viagens.length) return [];
+    if (loadingViagens || !viagens) return [];
     const userViagens = viagens
       .filter((v) => v.motoristaId === usuario?.id)
       .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
     return userViagens.slice(0, 5);
   }, [viagens, loadingViagens, usuario]);
+
+  // Define a cor do card Alertas baseado na quantidade
+  const corAlertas = useMemo(() => {
+    const count = alertas.length;
+    if (count > 10) return "#e74c3c"; // vermelho
+    if (count >= 5) return "#f39c12"; // amarelo
+    return "#27ae60"; // verde
+  }, [alertas]);
 
   return (
     <div
@@ -44,11 +51,11 @@ const Home = ({ usuario }) => {
         padding: 20,
         backgroundColor: colors.background,
         color: colors.textPrimary,
-        minHeight: "100vh",
+        minHeight: "auto",
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       }}
     >
-      <h1 style={{ color: colors.primary }}>Olá, {usuario?.nome || "Usuário"}!</h1>
+    
 
       <section style={{ marginTop: 30 }}>
         <h2>Resumo Rápido</h2>
@@ -69,14 +76,14 @@ const Home = ({ usuario }) => {
 
           <Card
             title="Alertas"
-            style={{ backgroundColor: colors.success, color: colors.background, flex: 1 }}
+            style={{ backgroundColor: corAlertas, color: colors.background, flex: 1 }}
           >
-            {loadingAlertas ? "Carregando..." : `${alertasCount} pendentes`}
+            {alertas.length} pendentes
           </Card>
         </div>
       </section>
 
-      {/* Você pode mostrar detalhes das viagens recentes aqui */}
+  
     </div>
   );
 };

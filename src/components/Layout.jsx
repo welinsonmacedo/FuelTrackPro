@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 
 const sidebarStyle = (collapsed) => ({
@@ -11,7 +11,7 @@ const sidebarStyle = (collapsed) => ({
   color: "#ecf0f1",
   paddingTop: "20px",
   transition: "width 0.3s ease",
-  overflow: "hidden",
+  overflowY: "auto",
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
@@ -27,28 +27,24 @@ const toggleButtonStyle = {
   alignSelf: "flex-end",
 };
 
-const menuItemStyle = (active) => ({
-  padding: "15px 20px",
+
+
+const submenuStyle = {
+  paddingLeft: 20,
+  display: "flex",
+  flexDirection: "column",
+};
+
+const submenuItemStyle = (active) => ({
+  padding: "8px 20px",
   cursor: "pointer",
+  backgroundColor: active ? "#3a5068" : "transparent",
+  color: "#ecf0f1",
+  textDecoration: "none",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  backgroundColor: active ? "#34495e" : "transparent",
-  textDecoration: "none",
-  color: "#ecf0f1",
-  display: "flex",
-  alignItems: "center",
-  gap: "10px",
-});
-
-const menuItemCollapsedStyle = (active) => ({
-  padding: "15px 10px",
-  cursor: "pointer",
-  textAlign: "center",
-  backgroundColor: active ? "#34495e" : "transparent",
-  textDecoration: "none",
-  color: "#ecf0f1",
-  display: "block",
+  userSelect: "none",
 });
 
 const contentStyle = (collapsed) => ({
@@ -59,6 +55,77 @@ const contentStyle = (collapsed) => ({
   backgroundColor: "#f4f6f8",
   boxSizing: "border-box",
 });
+
+function SidebarDropdown({ label, icon, items, collapsed, currentPath }) {
+  const [open, setOpen] = useState(false);
+
+  // Abrir automaticamente se algum submenu está ativo
+  useEffect(() => {
+    const isAnySubActive = items.some((item) => item.to === currentPath);
+    setOpen(isAnySubActive);
+  }, [currentPath, items]);
+
+  if (collapsed) {
+    // No colapsado, só mostra o ícone, sem dropdown
+    return (
+      <div
+        title={label}
+        style={{
+          padding: "12px 10px",
+          textAlign: "center",
+          cursor: "default",
+          userSelect: "none",
+          color: "#ecf0f1",
+        }}
+      >
+        {icon}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          cursor: "pointer",
+          padding: "12px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          backgroundColor: open ? "#34495e" : "transparent",
+          color: "#ecf0f1",
+          userSelect: "none",
+          fontWeight: "bold",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span>{icon}</span>
+          <span>{label}</span>
+        </div>
+        <span style={{ userSelect: "none" }}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div style={submenuStyle}>
+          {items.map(({ to, label }) => {
+            const active = currentPath === to;
+            return (
+              <Link
+                key={to}
+                to={to}
+                style={submenuItemStyle(active)}
+                title={label}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -75,27 +142,55 @@ export default function Layout() {
         setCollapsed(true);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [collapsed]);
 
-  const menuItems = [
-    { to: "/dashboard", icon: "📊", label: "Dashboard" },
-    { to: "/motoristas", icon: "🧑‍✈️", label: "Motoristas" },
-    { to: "/abastecimentos", icon: "⛽", label: "Abastecimentos" },
-    { to: "/veiculos", icon: "🚛", label: "Veículos" },
-    { to: "/manutencoes", icon: "🛠️", label: "Manutenções" },
-    { to: "/fornecedores", icon: "🏢", label: "Fornecedores" },
-    { to: "/viagens", icon: "🛣️", label: "Viagens" },
-    { to: "/medias", icon: "📈", label: "Médias" },
-    { to: "/mediasreport", icon: "📄", label: "Relatório de Médias" },
-    { to: "/notificacoes", icon: "🔔", label: "Notificações" },
-    { to: "/usuario", icon: "👤", label: "Usuário" },
-    { to: "/admin/configuracoes", icon: "👤", label: "Configurações" },
+  // Define as categorias e seus subitens
+  const menuCategorias = [
+    {
+      label: "Principal",
+      icon: "📊",
+      items: [
+        { to: "/dashboard", label: "Dashboard" },
+      
+      ],
+    },
+    {
+      label: "Gestão",
+      icon: "🛠️",
+      items: [
+        { to: "/motoristas", label: "Motoristas" },
+        { to: "/veiculos", label: "Veículos" },
+        { to: "/abastecimentos", label: "Abastecimentos" },
+        { to: "/manutencoes", label: "Manutenções" },
+        { to: "/tipos-manutencoes", label: "Tipos de Manutenção" },
+        { to: "/fornecedores", label: "Fornecedores" },
+      ],
+    },
+    {
+      label: "Operacional",
+      icon: "🛣️",
+      items: [
+        { to: "/viagens", label: "Viagens" },
+        { to: "/medias", label: "Médias" },
+        { to: "/mediasreport", label: "Relatório de Médias" },
+        { to: "/medias-mes", label: " Médias Mês" },
+        { to: "/notificacoes", label: "Notificações" },
+      ],
+    },
+    {
+      label: "Administração",
+      icon: "⚙️",
+      items: [
+        { to: "/usuario", label: "Usuário" },
+        { to: "/admin/configuracoes", label: "Configurações" },
+        { to: "/admin/licenca", label: "Licença" },
+        { to: "/admin/logs", label: "Logs" },
+      ],
+    },
   ];
 
   return (
@@ -104,29 +199,22 @@ export default function Layout() {
         <button
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
           style={toggleButtonStyle}
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => setCollapsed((c) => !c)}
         >
           {collapsed ? "»" : "«"}
         </button>
 
         <nav style={{ flex: 1 }}>
-          {menuItems.map(({ to, icon, label }) => {
-            const active = location.pathname === to;
-            return (
-              <Link
-                key={to}
-                to={to}
-                style={
-                  collapsed
-                    ? menuItemCollapsedStyle(active)
-                    : menuItemStyle(active)
-                }
-                title={label}
-              >
-                {icon} {!collapsed && label}
-              </Link>
-            );
-          })}
+          {menuCategorias.map(({ label, icon, items }) => (
+            <SidebarDropdown
+              key={label}
+              label={label}
+              icon={icon}
+              items={items}
+              collapsed={collapsed}
+              currentPath={location.pathname}
+            />
+          ))}
         </nav>
       </aside>
 
