@@ -11,11 +11,14 @@ import {
 
 export const useVeiculos = () => {
   const [veiculos, setVeiculos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchVeiculos = async () => {
+    setLoading(true);
     const snap = await getDocs(collection(db, "veiculos"));
     const list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     setVeiculos(list);
+    setLoading(false);
   };
 
   const adicionarVeiculo = async (dados) => {
@@ -37,5 +40,5 @@ export const useVeiculos = () => {
     fetchVeiculos();
   }, []);
 
-  return { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo };
+  return { veiculos, loading, adicionarVeiculo, editarVeiculo, excluirVeiculo };
 };

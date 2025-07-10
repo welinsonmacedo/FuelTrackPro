@@ -390,7 +390,18 @@ export default function ChecklistPage() {
         />
         <button
           onClick={carregarChecklists}
-          style={{ padding: "8px 16px", cursor: "pointer" }}
+          style={{
+          padding: "12px 20px",
+          fontSize: "16px",
+          cursor: "pointer",
+          borderRadius: "6px",
+          border: "none",
+          backgroundColor: "#4df55b",
+          color: "#1e1f3b",
+          fontWeight:"900",
+          width: "100%",
+          maxWidth: "400px",
+          boxSizing: "border-box"}}
         >
           Aplicar Filtros
         </button>

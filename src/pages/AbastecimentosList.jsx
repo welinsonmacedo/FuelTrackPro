@@ -213,14 +213,15 @@ const AbastecimentosList = () => {
           cursor: "pointer",
           borderRadius: "6px",
           border: "none",
-          backgroundColor: "#3498db",
-          color: "#fff",
+          backgroundColor: "#4df55b",
+          color: "#1e1f3b",
+          fontWeight:"900",
           width: "100%",
           maxWidth: "400px",
           boxSizing: "border-box",
         }}
       >
-        Cadastrar Abastecimento
+        Lançar Abastecimento
       </button>
 
       <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Abastecimento`}>
@@ -332,7 +333,7 @@ const AbastecimentosList = () => {
           <ListItem
             key={a.id}
             title={`${a.placa} - ${a.motorista || "-"}`}
-            subtitle={`KM: ${a.km} |  Data: ${formatData(a.data)} | Litros: ${a.litros} | Valor litro: R$ ${a.valorLitro.toFixed(2)}`}
+            subtitle={`KM: ${a.km} |  Data: ${formatData(a.data)} | Litros: ${a.litros} | Valor litro: R$ ${a.valorLitro.toFixed(2)} | Total:R$ ${a.valorLitro*a.litros}`}
             onEdit={() => handleEdit(a)}
             onDelete={() => setConfirmarId(a.id)}
             style={{ marginBottom: "12px" }}

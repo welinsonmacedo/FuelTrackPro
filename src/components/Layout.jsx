@@ -155,6 +155,7 @@ export default function Layout() {
       icon: "📊",
       items: [
         { to: "/dashboard", label: "Dashboard" },
+        { to: "/dashboard-kpis", label: "Dashboard KPIs" },
       
       ],
     },
@@ -162,26 +163,55 @@ export default function Layout() {
       label: "Gestão",
       icon: "🛠️",
       items: [
-        { to: "/motoristas", label: "Motoristas" },
-        { to: "/veiculos", label: "Veículos" },
+        { to: "/viagens", label: "Viagens" },
         { to: "/abastecimentos", label: "Abastecimentos" },
         { to: "/manutencoes", label: "Manutenções" },
+        { to: "/check-list", label: " Check-List" },
+         { to: "/notificacoes", label: "Notificações" },
+      ],
+    },
+    {
+      label: "Consultas",
+      icon: "🔍",
+      items: [
+       { to: "/veiculos-consulta", label: "Veiculos" },
+        { to: "/fornecedores-consulta", label: "Fornecedores" },
+        { to: "/motoristas-consulta", label: "Motoristas" },
+      ],
+    },
+    {
+      label: "Relátorios",
+      icon: "🛣️",
+      items: [
+        
+        { to: "/medias", label: "Médias" },
+        { to: "/mediasreport", label: "Relatório de Médias" },
+        { to: "/medias-mes", label: " Médias Mês" },
+        { to: "/relatorio-abastecimentos", label: "Abastecimentos" },
+      
+       
+      ],
+    },
+      {
+      label: "Cadastros/Edições",
+      icon: "✅",
+      items: [
+        { to: "/motoristas", label: "Motoristas" },
+        { to: "/veiculos", label: "Veículos" },
         { to: "/tipos-manutencoes", label: "Tipos de Manutenção" },
         { to: "/fornecedores", label: "Fornecedores" },
       ],
     },
-    {
-      label: "Operacional",
-      icon: "🛣️",
+   {
+      label: "Financeiro",
+      icon: "💸",
       items: [
-        { to: "/viagens", label: "Viagens" },
-        { to: "/medias", label: "Médias" },
-        { to: "/mediasreport", label: "Relatório de Médias" },
-        { to: "/medias-mes", label: " Médias Mês" },
-        { to: "/check-list", label: " Check-List" },
-        { to: "/notificacoes", label: "Notificações" },
+        { to: "/financeiro", label: "Geral" },
+        { to: "/relatorio-financeiro", label: "Relatorio" },
+      
       ],
     },
+
     {
       label: "Administração",
       icon: "⚙️",

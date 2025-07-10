@@ -59,3 +59,18 @@ export function formatarPeriodo(dataInicio, dataFim) {
 
   return `${formatar(inicio)} - ${formatar(fim)}`;
 }
+
+export const formatCurrency = (valor) =>
+  valor ? `R$ ${Number(valor).toFixed(2).replace('.', ',')}` : "-";
+
+export const calcularMediaConsumo = (abastecimentos) => {
+  const consumos = abastecimentos
+    .map((a) => (a.litros > 0 && a.km > 0 ? a.km / a.litros : null))
+    .filter((c) => c !== null);
+
+  const soma = consumos.reduce((acc, val) => acc + val, 0);
+  const mediaGeral = consumos.length > 0 ? soma / consumos.length : 0;
+
+  return { geral: mediaGeral };
+};
+

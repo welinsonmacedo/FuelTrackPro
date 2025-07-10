@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useManutencoes } from "../hooks/useManutencoes";
 import { useAbastecimentos } from "../hooks/useAbastecimentos";
 import { useTiposManutencao } from "../hooks/useTiposManutencao";
@@ -11,6 +11,7 @@ const Notificacoes = () => {
   const { tipos } = useTiposManutencao();
 
   const hoje = new Date();
+  const [expandido, setExpandido] = useState([]);
   const navigate = useNavigate();
 
   function getUltimoKm(placa) {
@@ -29,7 +30,12 @@ const Notificacoes = () => {
     return tipos.find((t) => t.nome === nomeTipo) || null;
   }
 
-  // Filtra as manutenções que estão em alerta
+  const toggleExpandido = (id) => {
+    setExpandido((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
   const alertas = manutencoes.filter((m) => {
     if (m.realizada) return false;
 
@@ -55,14 +61,14 @@ const Notificacoes = () => {
       alertaKm = diffKm <= kmAntecedencia && diffKm >= 0;
     }
 
-    // Também inclui quando já passou do km e manutenção não foi feita (atraso)
-    const atrasoKm = m.proximaRevisaoKm !== undefined && ultimoKm > m.proximaRevisaoKm;
+    const atrasoKm =
+      m.proximaRevisaoKm !== undefined && ultimoKm > m.proximaRevisaoKm;
 
     return alertaData || alertaKm || atrasoKm;
   });
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem" }}>
+    <div style={{ maxWidth: "auto", margin: "0 auto" }}>
       <h2 style={{ marginBottom: "1.5rem" }}>🔔 Notificações de Manutenção</h2>
 
       {alertas.length === 0 ? (
@@ -80,54 +86,84 @@ const Notificacoes = () => {
             ? m.proximaRevisaoKm - kmAtual
             : null;
 
-          // Verifica se está atrasado (KM atual > KM revisão)
-          const estaAtrasadoKm = m.proximaRevisaoKm !== undefined && kmAtual > m.proximaRevisaoKm;
+          const estaAtrasadoKm =
+            m.proximaRevisaoKm !== undefined && kmAtual > m.proximaRevisaoKm;
 
-          // Estilo baseado no atraso
           const estiloAlerta = {
             borderRadius: "8px",
-            padding: "1rem",
-            marginBottom: "1rem",
+            padding: "0.5rem",
             boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
             cursor: "pointer",
-            border: estaAtrasadoKm ? "1.5px solid #e74c3c" : "1px solid #f39c12",
+            border: estaAtrasadoKm
+              ? "1.5px solid #e74c3c"
+              : "1px solid #f39c12",
             backgroundColor: estaAtrasadoKm ? "#fdecea" : "#fffaf3",
           };
+
+          const isExpanded = expandido.includes(m.id);
 
           return (
             <div
               key={m.id}
               style={estiloAlerta}
-              onClick={() => navigate(`/manutencoes`)}
-              title="Clique para ver detalhes da manutenção"
+              onClick={() => toggleExpandido(m.id)}
+              title="Clique para expandir ou recolher"
             >
-              <h3 style={{ marginBottom: "0.5rem", color: estaAtrasadoKm ? "#e74c3c" : "inherit" }}>
+              <h3
+                style={{
+                  marginBottom: "0.5rem",
+                  color: estaAtrasadoKm ? "#e74c3c" : "inherit",
+                }}
+              >
                 🚗 {m.placa} - {tipoCompleto?.nome || "Tipo não informado"}
                 {estaAtrasadoKm && " (ATRAZADO)"}
               </h3>
-              <p>
-                <b>Fornecedor:</b> {m.fornecedor || "-"} <br />
-                <b>Observação:</b> {m.observacao || "-"}
-              </p>
 
-              {m.proximaRevisaoData && (
-                <p>
-                  <b>Próxima Revisão (Data):</b>{" "}
-                  {formatData(m.proximaRevisaoData)} <br />
-                  <b>Faltam:</b> {diffDias} dia(s) <br />
-                  <b>Antecedência Padrão:</b>{" "}
-                  {tipoCompleto?.avisoDiasAntes ?? "-"} dias
-                </p>
-              )}
+              {isExpanded && (
+                <div>
+                  <p>
+                    <b>Fornecedor:</b> {m.fornecedor || "-"} <br />
+                    <b>Observação:</b> {m.observacao || "-"}
+                  </p>
 
-              {m.proximaRevisaoKm && (
-                <p>
-                  <b>Próxima Revisão (KM):</b> {m.proximaRevisaoKm} <br />
-                  <b>KM Atual:</b> {kmAtual} <br />
-                  <b>Faltam:</b> {diffKm} km <br />
-                  <b>Antecedência Padrão:</b>{" "}
-                  {tipoCompleto?.avisoKmAntes ?? "-"} km
-                </p>
+                  {m.proximaRevisaoData && (
+                    <p>
+                      <b>Próxima Revisão (Data):</b>{" "}
+                      {formatData(m.proximaRevisaoData)} <br />
+                      <b>Faltam:</b> {diffDias} dia(s) <br />
+                      <b>Antecedência Padrão:</b>{" "}
+                      {tipoCompleto?.avisoDiasAntes ?? "-"} dias
+                    </p>
+                  )}
+
+                  {m.proximaRevisaoKm && (
+                    <p>
+                      <b>Próxima Revisão (KM):</b> {m.proximaRevisaoKm} <br />
+                      <b>KM Atual:</b> {kmAtual} <br />
+                      <b>Faltam:</b> {diffKm} km <br />
+                      <b>Antecedência Padrão:</b>{" "}
+                      {tipoCompleto?.avisoKmAntes ?? "-"} km
+                    </p>
+                  )}
+
+                  <button
+                    style={{
+                      marginTop: "0.5rem",
+                      background: "#3498db",
+                      color: "#fff",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      cursor:"pointer"
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/manutencoes");
+                    }}
+                  >
+                    Ver todas as manutenções
+                  </button>
+                </div>
               )}
             </div>
           );

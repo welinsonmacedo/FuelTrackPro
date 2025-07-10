@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
@@ -27,6 +28,13 @@ import Licenca from "./pages/Licenca";
 import Logs from "./pages/Logs";
 import MediaGeralPorMesPage from "./pages/MediaGeralPorMesPage";
 import ChecklistPage from "./pages/ChecklistPage";
+import VeiculosConsulta from "./pages/VeiculosConsulta";
+import FornecedoresConsulta from "./pages/FornecedoresConsulta";
+import MotoristasConsulta from "./pages/MotoristasConsulta";
+import RelatorioAbastecimentos from "./pages/RelatorioAbastecimentos";
+import DashboardKPIs from "./pages/DashboardKPI";
+import FinanceiroPage from "./pages/FinanceiroPage";
+import RelatoriosFinanceirosPage from "./pages/RelatoriosFinanceirosPage";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -48,58 +56,67 @@ function AppWrapper() {
     }
   }, [usuario, tipoUsuario, loading, navigate, location.pathname]);
 
-return (
-  <Routes>
-    {/* Rota pública */}
-    <Route path="/login" element={<Login />} />
+  return (
+    <Routes>
+      {/* Rota pública */}
+      <Route path="/login" element={<Login />} />
 
-    {/* Área exclusiva motorista */}
-    <Route
-      path="/motorista/*"
-      element={
-        <PrivateRoute allowedRoles={["motorista"]}>
-          <MotoristaArea />
-        </PrivateRoute>
-      }
-    />
+      {/* Área exclusiva motorista */}
+      <Route
+        path="/motorista/*"
+        element={
+          <PrivateRoute allowedRoles={["motorista"]}>
+            <MotoristaArea />
+          </PrivateRoute>
+        }
+      />
 
-    {/* Área protegida admin + padrão com layout principal */}
-    <Route
-      path="/*"
-      element={
-        <PrivateRoute allowedRoles={["admin", "padrao"]}>
-          <Layout />
-        </PrivateRoute>
-      }
-    >
-      <Route path="dashboard" element={<Dashboard />} />
-      <Route path="home" element={<Home />} />
-      <Route path="motoristas" element={<MotoristasList />} />
-      <Route path="veiculos" element={<VeiculosList />} />
-      <Route path="abastecimentos" element={<AbastecimentosList />} />
-      <Route path="manutencoes" element={<ManutencoesList />} />
-      <Route path="tipos-manutencoes" element={<TiposManutencaoList />} />
-      <Route path="fornecedores" element={<FornecedoresList />} />
-      <Route path="notificacoes" element={<Notificacoes />} />
-      <Route path="viagens" element={<ViagensList />} />
-      <Route path="medias" element={<MediasPage />} />
-      <Route path="mediasreport" element={<MediasCalculadasPage />} />
-      <Route path="usuario" element={<UsuarioPage />} />
-      <Route path="medias-mes" element={<MediaGeralPorMesPage/>} />
-      <Route path="check-list" element={<ChecklistPage/>} />
-    </Route>
-
-    {/* Admin Routes separadas com layout próprio (caso queira reutilizar o Layout) */}
-    <Route path="/admin" element={<AdminRoutes />}>
-      <Route element={<Layout />}>
-        <Route path="usuarios" element={<UsuarioPage />} />
-        <Route path="configuracoes" element={<ConfiguracoesPage />} />
-        <Route path="licenca" element={<Licenca />} />
-        <Route path="logs" element={<Logs />} />
+      {/* Área protegida admin + padrão com layout principal */}
+      <Route
+        path="/*"
+        element={
+          <PrivateRoute allowedRoles={["admin", "padrao"]}>
+            <Layout />
+          </PrivateRoute>
+        }
+      >
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="home" element={<Home />} />
+        <Route path="motoristas" element={<MotoristasList />} />
+        <Route path="veiculos" element={<VeiculosList />} />
+        <Route path="abastecimentos" element={<AbastecimentosList />} />
+        <Route path="manutencoes" element={<ManutencoesList />} />
+        <Route path="tipos-manutencoes" element={<TiposManutencaoList />} />
+        <Route path="fornecedores" element={<FornecedoresList />} />
+        <Route path="notificacoes" element={<Notificacoes />} />
+        <Route path="viagens" element={<ViagensList />} />
+        <Route path="medias" element={<MediasPage />} />
+        <Route path="mediasreport" element={<MediasCalculadasPage />} />
+        <Route path="usuario" element={<UsuarioPage />} />
+        <Route path="medias-mes" element={<MediaGeralPorMesPage />} />
+        <Route path="check-list" element={<ChecklistPage />} />
+        <Route path="veiculos-consulta" element={<VeiculosConsulta />} />
+        <Route path="fornecedores-consulta" element={<FornecedoresConsulta />}
+        />
+        <Route path="motoristas-consulta" element={<MotoristasConsulta />} />
+        <Route path="relatorio-abastecimentos" element={<RelatorioAbastecimentos />}
+        />
+        <Route path="dashboard-kpis" element={<DashboardKPIs />} />
+        <Route path="financeiro" element={<FinanceiroPage/>} />
+        <Route path="relatorio-financeiro" element={<RelatoriosFinanceirosPage/>} />
       </Route>
-    </Route>
-  </Routes>
-);
+
+      {/* Admin Routes separadas com layout próprio (caso queira reutilizar o Layout) */}
+      <Route path="/admin" element={<AdminRoutes />}>
+        <Route element={<Layout />}>
+          <Route path="usuarios" element={<UsuarioPage />} />
+          <Route path="configuracoes" element={<ConfiguracoesPage />} />
+          <Route path="licenca" element={<Licenca />} />
+          <Route path="logs" element={<Logs />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
 }
 
 export default function App() {
