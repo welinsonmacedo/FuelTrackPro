@@ -208,7 +208,7 @@ export default function Layout() {
       items: [
         { to: "/financeiro", label: "Geral" },
         { to: "/relatorio-financeiro", label: "Relatorio" },
-      
+      { to: "/financeiro-cadastro", label: "Cadastro" },
       ],
     },
 
