@@ -51,6 +51,7 @@ export default function ChecklistViagem({
   rota,
   placa,
   motorista,
+  viagemId, // <-- Recebe o id da viagem
   onSave,
 }) {
   const checklist = checklistPadrao;
@@ -66,7 +67,7 @@ export default function ChecklistViagem({
 
   const [observacoesGerais, setObservacoesGerais] = useState("");
   const [osCriada, setOsCriada] = useState(false);
-  const [statusOS, setStatusOS] = useState(null); // pode ser "aberta", "concluida" ou null
+  const [statusOS, setStatusOS] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { salvarChecklist } = useChecklists();
@@ -93,8 +94,8 @@ export default function ChecklistViagem({
   };
 
   const handleSubmit = async () => {
-   
     const dadosChecklist = {
+      viagemId,        // <-- Inclui o ID da viagem
       rota,
       placa,
       motorista,
@@ -105,7 +106,7 @@ export default function ChecklistViagem({
       osCriada,
       statusOS,
     };
- console.log(dadosChecklist.placa)
+
     try {
       setIsSaving(true);
       await checklistSchema.validate(dadosChecklist);
@@ -136,9 +137,7 @@ export default function ChecklistViagem({
 
       {checklist.map((grupo) => (
         <div key={grupo.titulo} style={{ marginBottom: 24 }}>
-          <h4
-            style={{ marginBottom: 10, color: "#2c3e50", fontSize: "18px" }}
-          >
+          <h4 style={{ marginBottom: 10, color: "#2c3e50", fontSize: "18px" }}>
             {grupo.titulo}
           </h4>
           {grupo.itens.map((item) => (
@@ -233,7 +232,6 @@ export default function ChecklistViagem({
         </label>
       </div>
 
-      {/* Controle da OS */}
       <div style={{ marginBottom: 20 }}>
         <label>
           <input

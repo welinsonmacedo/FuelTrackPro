@@ -13,8 +13,12 @@ const styles = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 1001,
-    maxWidth: '800px',
-    maxHeight: '90vh',
+    Width: '100%',
+               // mínimo que o modal deve ter
+    maxHeight: '100vh',
+    minHeight: '150px',           // mínimo que o modal deve ter de altura
+    display: 'flex',
+    flexDirection: 'column',
     overflow: 'hidden',
     borderRadius: '8px',
   },
@@ -24,8 +28,9 @@ const styles = {
     borderRadius: '8px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
     boxSizing: 'border-box',
-    height: 'auto',
-    overflowY: 'auto',
+    height: 'auto',               // para crescer conforme conteúdo
+    maxHeight: '100vh',            // limitar para caber na tela
+    overflowY: 'auto',            // scroll interno se ultrapassar maxHeight
     position: 'relative',
   },
   closeButton: {
@@ -50,7 +55,7 @@ const styles = {
   formLayout: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '16px',
+    gap: '1px',
   },
   inputItem: {
     flex: '1 1 45%',
@@ -58,6 +63,7 @@ const styles = {
     boxSizing: 'border-box',
   },
 };
+
 
 export const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;

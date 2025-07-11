@@ -54,15 +54,20 @@ const cancelStyle = {
   color: '#fff',
 };
 
-export const ConfirmDialog = ({ title, message, onConfirm, onCancel }) => (
-  <div style={backdropStyle}>
-    <div style={containerStyle}>
-      <h2 style={titleStyle}>{title}</h2>
-      <p style={messageStyle}>{message}</p>
-      <div>
-        <button onClick={onCancel} style={cancelStyle}>Cancelar</button>
-        <button onClick={onConfirm} style={confirmStyle}>Confirmar</button>
+export const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }) => {
+  if (!isOpen) return null; // Não renderiza nada se não estiver aberto
+
+  return (
+    <div style={backdropStyle}>
+      <div style={containerStyle}>
+        <h2 style={titleStyle}>{title}</h2>
+        <p style={messageStyle}>{message}</p>
+        <div>
+          <button onClick={onCancel} style={cancelStyle}>Cancelar</button>
+          <button onClick={onConfirm} style={confirmStyle}>Confirmar</button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+

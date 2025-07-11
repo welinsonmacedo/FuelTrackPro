@@ -42,11 +42,11 @@ export default function Login() {
   return (
     <div
       style={{
-        height: "100vh",              // ocupa altura total da tela
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",     // centraliza verticalmente
-        alignItems: "center",         // centraliza horizontalmente
+        justifyContent: "center",
+        alignItems: "center",
         padding: 20,
         backgroundColor: "#f9f9f9",
       }}
@@ -63,7 +63,7 @@ export default function Login() {
           alignItems: "center",
         }}
       >
-        <Logo width={200} height={200} />
+        <img src="./logo.jpeg" alt="" style={{ width: 200 }} />
 
         <form
           onSubmit={handleLogin}
@@ -103,6 +103,39 @@ export default function Login() {
             {erro}
           </p>
         )}
+
+        {erro && (
+          <p
+            className="error"
+            style={{ color: "red", marginTop: 10, textAlign: "center" }}
+            role="alert"
+          >
+            {erro}
+          </p>
+        )}
+
+        <p
+          style={{
+            marginTop: 20,
+            fontSize: 14,
+            textAlign: "center",
+            color: "#555",
+          }}
+        >
+          Esqueceu a senha ou não tem acesso?{" "}
+          <a
+            href="https://wa.me/5534991448794"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#25D366",
+              textDecoration: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Fale com o suporte pelo WhatsApp 📱
+          </a>
+        </p>
       </div>
     </div>
   );

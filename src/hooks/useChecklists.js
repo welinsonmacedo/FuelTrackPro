@@ -1,9 +1,13 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { db } from "../services/firebase";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
 
-export const useChecklists = (viagemId = null) => {
+export const useChecklists = ({
+  viagemId = null,
+  veiculoId = null,
+  dataInicio = null,
+  dataFim = null,
+} = {}) => {
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -16,16 +20,29 @@ export const useChecklists = (viagemId = null) => {
     });
   };
 
-  // Função para listar checklists da viagem (ou todos se viagemId não fornecido)
+  // Função para listar checklists com filtros opcionais
   const listarChecklists = async () => {
     setLoading(true);
     try {
       const ref = collection(db, "checklists");
-      let q;
+      const conditions = [];
+
       if (viagemId) {
-        q = query(ref, where("viagemId", "==", viagemId));
+        conditions.push(where("viagemId", "==", viagemId));
       }
-      const snapshot = q ? await getDocs(q) : await getDocs(ref);
+      if (veiculoId) {
+        conditions.push(where("veiculoId", "==", veiculoId));
+      }
+      if (dataInicio) {
+        conditions.push(where("data", ">=", Timestamp.fromDate(new Date(dataInicio))));
+      }
+      if (dataFim) {
+        conditions.push(where("data", "<=", Timestamp.fromDate(new Date(dataFim))));
+      }
+
+      const q = conditions.length > 0 ? query(ref, ...conditions) : ref;
+
+      const snapshot = await getDocs(q);
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setChecklists(data);
     } catch (error) {
@@ -35,10 +52,10 @@ export const useChecklists = (viagemId = null) => {
     setLoading(false);
   };
 
-  // Carregar ao montar o hook e quando viagemId mudar
+  // Recarrega quando algum filtro mudar
   useEffect(() => {
     listarChecklists();
-  }, [viagemId]);
+  }, [viagemId, veiculoId, dataInicio, dataFim]);
 
   return { checklists, loading, salvarChecklist, listarChecklists };
 };

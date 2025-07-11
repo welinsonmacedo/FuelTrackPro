@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Timestamp, doc, updateDoc } from "firebase/firestore";
+import {
+  Timestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { viagensSchema } from "../schemas/viagemSchema";
 import { useViagens } from "../hooks/useViagens";
 import { useAbastecimentos } from "../hooks/useAbastecimentos";
@@ -15,11 +23,10 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { formatarPeriodo, formatData } from "../utils/data";
 import { db } from "../services/firebase";
 import { SearchInput } from "../components/SearchInput";
-import ChecklistViagem from "./ChecklistViagem"; // novo
+import ChecklistViagem from "./ChecklistViagem";
 
 const ViagensList = ({ mostrarCadastrar = true }) => {
-  const { viagens, adicionarViagem, editarViagem, excluirViagem } =
-    useViagens();
+  const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
 
@@ -29,21 +36,27 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
   const [viagemParaVincular, setViagemParaVincular] = useState(null);
-  const [viagemChecklist, setViagemChecklist] = useState(null); // novo
+  const [viagemChecklist, setViagemChecklist] = useState(null);
+
+  // Objeto com chaves = id da viagem e valor = array de checklists vinculados
+  const [checklistsPorViagem, setChecklistsPorViagem] = useState({});
 
   const clean = (str) => (str || "").toString().toLowerCase().trim();
 
-  const filtrados = viagens.filter((v) => {
+  // Filtra viagens pelo termo da busca
+  const filtrados = useMemo(() => {
     const buscaLower = busca.toLowerCase();
-   
-    return (
-      clean(v.placa).includes(buscaLower) ||
-      clean(v.motorista).includes(buscaLower) ||
-      clean(v.rota).includes(buscaLower)
-      
-    );
-  });
 
+    return viagens.filter((v) => {
+      return (
+        clean(v.placa).includes(buscaLower) ||
+        clean(v.motorista).includes(buscaLower) ||
+        clean(v.rota).includes(buscaLower)
+      );
+    });
+  }, [viagens, busca]);
+
+  // Hook form setup
   const {
     register,
     handleSubmit,
@@ -51,6 +64,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: yupResolver(viagensSchema) });
 
+  // Placas e motoristas disponíveis para selects
   const placasDisponiveis = [
     ...new Set(abastecimentos.map((ab) => ab.placa).filter(Boolean)),
   ];
@@ -58,6 +72,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     ...new Set(abastecimentos.map((ab) => ab.motorista).filter(Boolean)),
   ];
 
+  // Form reset quando abrir/fechar modal
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
@@ -78,6 +93,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     }
   }, [mostrarForm, editando, reset]);
 
+  // Funções abrir/fechar modal e submit formulário
   const abrirCadastro = () => {
     setEditando(null);
     setTituloForm("Cadastro");
@@ -117,6 +133,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     setConfirmarId(null);
   };
 
+  // Vinculação de abastecimentos
   const abastecimentosVinculados = useMemo(() => {
     if (!viagemParaVincular) return [];
     return abastecimentos.filter((ab) => ab.viagemId === viagemParaVincular.id);
@@ -177,6 +194,36 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       alert("Erro ao desvincular abastecimento.");
     }
   };
+
+  // === BUSCAR CHECKLISTS FILTRADOS POR viagemId ===
+  useEffect(() => {
+    async function fetchChecklistsPorViagem() {
+      const resultados = {};
+
+      for (const viagem of filtrados) {
+        try {
+          // Buscar checklist onde viagemId == viagem.id
+          const q = query(
+            collection(db, "checklists"),
+            where("viagemId", "==", viagem.id)
+          );
+
+          const querySnapshot = await getDocs(q);
+          const checklists = querySnapshot.docs.map((doc) => doc.data());
+
+          console.log(`Resultados para ${viagem.id}`, checklists.length);
+          resultados[viagem.id] = checklists;
+        } catch (error) {
+          console.error("Erro ao buscar checklists para viagem", viagem.id, error);
+          resultados[viagem.id] = [];
+        }
+      }
+
+      setChecklistsPorViagem(resultados);
+    }
+
+    fetchChecklistsPorViagem();
+  }, [filtrados]);
 
   if (loadingRotas) return <p>Carregando rotas...</p>;
 
@@ -306,44 +353,58 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       />
 
       <div>
-        {filtrados.map((v) => (
-  
-          <ListItem
-            key={v.id}
-            title={`${v.placa} - ${v.motorista}`}
-            subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(v.dataInicio, v.dataFim)}`}
-            onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
-            onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
-            actions={[
-              {
-                label: "Vincular",
-                onClick: () => setViagemParaVincular(v),
-                style: {
-                  backgroundColor: "#28a745",
-                  border: "1px solid #28a745",
+        {filtrados.map((v) => {
+          const checklistsDaViagem = checklistsPorViagem[v.id] || [];
+
+          // Desabilitar botão se já tem checklist daquele tipo para essa viagem (baseado no viagemId)
+          const temChecklistInicio = checklistsDaViagem.some(
+            (c) => c.tipo === "inicio"
+          );
+          const temChecklistFim = checklistsDaViagem.some(
+            (c) => c.tipo === "fim"
+          );
+
+          return (
+            <ListItem
+              key={v.id}
+              title={`${v.placa} - ${v.motorista}`}
+              subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(
+                v.dataInicio,
+                v.dataFim
+              )}`}
+              onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
+              onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
+              actions={[
+                {
+                  label: "Vincular",
+                  onClick: () => setViagemParaVincular(v),
+                  style: {
+                    backgroundColor: "#28a745",
+                    border: "1px solid #28a745",
+                  },
                 },
-              },
-              
-              {
-                label: "Checklist Início",
-                onClick: () =>
-                  setViagemChecklist({ viagem: v, tipo: "inicio" }),
-                style: {
-                  backgroundColor: "#f39c12",
-                  border: "1px solid #f39c12",
+                {
+                  label: "Checklist Início",
+                  onClick: () => setViagemChecklist({ viagem: v, tipo: "inicio" }),
+                  style: {
+                    backgroundColor: temChecklistInicio ? "#aaa" : "#f39c12",
+                    border: `1px solid ${temChecklistInicio ? "#999" : "#f39c12"}`,
+                  },
+                  disabled: temChecklistInicio,
                 },
-              },
-              {
-                label: "Checklist Fim",
-                onClick: () => setViagemChecklist({ viagem: v, tipo: "fim" }),
-                style: {
-                  backgroundColor: "#8e44ad",
-                  border: "1px solid #8e44ad",
+                {
+                  label: "Checklist Fim",
+                  onClick: () => setViagemChecklist({ viagem: v, tipo: "fim" }),
+                  style: {
+                    backgroundColor: temChecklistFim ? "#aaa" : "#8e44ad",
+                    border: `1px solid ${temChecklistFim ? "#999" : "#8e44ad"}`,
+                  },
+                  disabled: temChecklistFim,
                 },
-              },
-            ]}
-          />
-        ))}
+              ]}
+            />
+          );
+        })}
       </div>
 
       {confirmarId && (
@@ -358,9 +419,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
-        title={`Vincular Abastecimentos - Viagem ${
-          viagemParaVincular?.placa || ""
-        }`}
+        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
       >
         <div>
           <h3>Abastecimentos disponíveis para vincular:</h3>
@@ -445,15 +504,14 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         <Modal
           isOpen={true}
           onClose={() => setViagemChecklist(null)}
-          title={`Checklist de ${
-            viagemChecklist.tipo === "inicio" ? "Início" : "Fim"
-          } - ${viagemChecklist.viagem?.placa}`}
+          title={`Checklist de ${viagemChecklist.tipo === "inicio" ? "Início" : "Fim"} - ${viagemChecklist.viagem?.placa}`}
         >
           <ChecklistViagem
             tipo={viagemChecklist.tipo}
-             rota={viagemChecklist.viagem.rota}    
+            rota={viagemChecklist.viagem.rota}
             placa={viagemChecklist.viagem.placa}
             motorista={viagemChecklist.viagem.motorista}
+            viagemId={viagemChecklist.viagem.id} // importante passar o id da viagem
             onClose={() => setViagemChecklist(null)}
           />
         </Modal>

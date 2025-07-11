@@ -13,79 +13,75 @@ export const ListItem = ({ title, subtitle, onEdit, onDelete, actions = [] }) =>
     }}
   >
     <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{title}</h3>
-    <p
-  style={{ margin: '0 0 12px 0', color: '#555', fontSize: '14px' }}
-  // Se quiser aceitar JSX e manter o estilo, use:
->
-  {typeof subtitle === 'string' ? subtitle : subtitle}
-</p>
-    <div
-      style={{
-        display: 'flex',
-        gap: '10px',
-        flexWrap: 'wrap', // permite os botões quebrarem linha em telas pequenas
-      }}
-    >
-      <button
-        onClick={onEdit}
-        style={{
-          flex: '1 1 120px',
-          padding: '10px',
-          fontSize: '14px',
-          cursor: 'pointer',
-          borderRadius: '6px',
-          border: '1px solid #3498db',
-          backgroundColor: '#3498db',
-          color: '#fff',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#2980b9')}
-        onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#3498db')}
-      >
-        Editar
-      </button>
+    <p style={{ margin: '0 0 12px 0', color: '#555', fontSize: '14px' }}>
+      {typeof subtitle === 'string' ? subtitle : subtitle}
+    </p>
 
-      <button
-        onClick={onDelete}
-        style={{
-          flex: '1 1 120px',
-          padding: '10px',
-          fontSize: '14px',
-          cursor: 'pointer',
-          borderRadius: '6px',
-          border: '1px solid #e74c3c',
-          backgroundColor: '#e74c3c',
-          color: '#fff',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c0392b')}
-        onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#e74c3c')}
-      >
-        Excluir
-      </button>
-
-      {actions.map(({ label, onClick, style }, idx) => (
+    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      {onEdit && (
         <button
-          key={idx}
-          onClick={onClick}
+          onClick={onEdit}
           style={{
-            flex: '1 1 140px',
+            flex: '1 1 120px',
             padding: '10px',
             fontSize: '14px',
             cursor: 'pointer',
             borderRadius: '6px',
-            border: '1px solid #555',
-            backgroundColor: '#555',
+            border: '1px solid #3498db',
+            backgroundColor: '#3498db',
             color: '#fff',
-            transition: 'background-color 0.3s',
-            ...style,
           }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#333')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = style?.backgroundColor || '#555')}
         >
-          {label}
+          Editar
         </button>
-      ))}
+      )}
+
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          style={{
+            flex: '1 1 120px',
+            padding: '10px',
+            fontSize: '14px',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            border: '1px solid #e74c3c',
+            backgroundColor: '#e74c3c',
+            color: '#fff',
+          }}
+        >
+          Excluir
+        </button>
+      )}
+
+      {actions.map(({ label, onClick, style = {}, disabled = false }, idx) => {
+        const isDisabled = !!disabled;
+        return (
+          <button
+            key={idx}
+            onClick={!isDisabled ? onClick : undefined}
+            disabled={isDisabled}
+            style={{
+              flex: '1 1 140px',
+              padding: '10px',
+              fontSize: '14px',
+              borderRadius: '6px',
+              backgroundColor: isDisabled
+                ? '#d3d3d3'
+                : style.backgroundColor || '#555',
+              border: isDisabled
+                ? '1px solid #999'
+                : style.border || '1px solid #555',
+              color: isDisabled ? '#777' : style.color || '#fff',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              opacity: isDisabled ? 0.6 : 1,
+              transition: '0.3s ease all',
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
     </div>
   </div>
 );

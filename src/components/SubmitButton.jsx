@@ -6,6 +6,7 @@ export const SubmitButton = ({ children, loading }) => (
     disabled={loading}
     style={{
       width: '100%',
+      display:"block",
       padding: '12px 0',
       backgroundColor: loading ? '#a3b0f7' : '#6a8af3',
       color: '#fff',
