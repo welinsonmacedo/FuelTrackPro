@@ -1,5 +1,6 @@
 import * as yup from "yup";
 
+
 export const itemUsadoSchema = yup.object().shape({
   descricao: yup.string().required("Descrição do item é obrigatória"),
   quantidade: yup
@@ -14,41 +15,46 @@ export const itemUsadoSchema = yup.object().shape({
     .min(0, "Valor unitário não pode ser negativo"),
 });
 
+// Schema principal
 export const manutencaoSchema = yup.object().shape({
   placa: yup.string().required("A placa é obrigatória"),
-  tipoManutencao: yup.string().required("O tipo de manutenção é obrigatório"),
+  tipoManutencao: yup
+    .string()
+    .required("Tipo de manutenção é obrigatório"),
   fornecedor: yup.string().required("O fornecedor é obrigatório"),
-  observacao: yup.string().optional(),
+  observacao: yup.string().nullable().notRequired(),
   km: yup
     .number()
     .typeError("O KM deve ser um número")
-    .required("O KM é obrigatório"),
-  proximaRevisaoData: yup.date().nullable(),
-  proximaRevisaoKm: yup.number().nullable(),
+    .required("O KM é obrigatório")
+    .min(0, "KM não pode ser negativo"),
 
-  // Ajuste para não ter dependência cíclica:
-  dataRealizacao: yup
-    .date()
-    .nullable()
-    .notRequired(),
+  proximaRevisaoData: yup.date().nullable().notRequired(),
+  proximaRevisaoKm: yup.number().nullable().notRequired(),
+
+  dataRealizacao: yup.date().nullable().notRequired(),
 
   kmRealizacao: yup
     .number()
-    .typeError("KM da realização deve ser número")
     .nullable()
-    .notRequired()
+    .transform((value, originalValue) =>
+      String(originalValue).trim() === "" ? null : value
+    )
     .when("dataRealizacao", {
       is: (val) => val != null && val !== "",
-      then: yup.number().required("KM da realização é obrigatório quando data de realização é informada"),
+      then: (schema) =>
+        schema.required("KM da realização é obrigatório quando data de realização é informada"),
+      otherwise: (schema) => schema.notRequired(),
     }),
 
   fornecedorRealizacao: yup
     .string()
     .nullable()
-    .notRequired()
     .when("dataRealizacao", {
       is: (val) => val != null && val !== "",
-      then: yup.string().required("Fornecedor da realização é obrigatório quando data de realização é informada"),
+      then: (schema) =>
+        schema.required("Fornecedor da realização é obrigatório quando data de realização é informada"),
+      otherwise: (schema) => schema.notRequired(),
     }),
 
   valorServico: yup
@@ -60,11 +66,7 @@ export const manutencaoSchema = yup.object().shape({
 
   numeroNF: yup.string().nullable().notRequired(),
 
-  itensUsados: yup
-    .array()
-    .of(itemUsadoSchema)
-    .nullable()
-    .notRequired(),
+  itensUsados: yup.array().of(itemUsadoSchema).nullable().notRequired(),
 
   desconto: yup
     .number()

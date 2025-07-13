@@ -9,7 +9,7 @@ export const Form = ({ children, ...props }) => {
         gap: "10px",
         alignItems: "flex-start",
         justifyContent: "space-between",
-        ...props.style,
+        ...(props.style || {}), // ← garante que não dê erro se for undefined
       }}
     >
       {children}

@@ -59,14 +59,14 @@ const contentStyle = (collapsed) => ({
 function SidebarDropdown({ label, icon, items, collapsed, currentPath }) {
   const [open, setOpen] = useState(false);
 
-  // Abrir automaticamente se algum submenu está ativo
+
   useEffect(() => {
     const isAnySubActive = items.some((item) => item.to === currentPath);
     setOpen(isAnySubActive);
   }, [currentPath, items]);
 
   if (collapsed) {
-    // No colapsado, só mostra o ícone, sem dropdown
+  
     return (
       <div
         title={label}
@@ -209,6 +209,7 @@ export default function Layout() {
         { to: "/financeiro", label: "Geral" },
         { to: "/relatorio-financeiro", label: "Relatorio" },
       { to: "/financeiro-cadastro", label: "Cadastro" },
+      { to: "/financeiro-notas-os", label: "Notas/Os" },
       ],
     },
 

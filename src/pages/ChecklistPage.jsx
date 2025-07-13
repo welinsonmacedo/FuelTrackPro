@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { db } from "../services/firebase";
+import { useAuth } from "../contexts/AuthContext";
+import { useEmpresa } from "../hooks/useEmpresa";
 import {
   collection,
   getDocs,
@@ -9,14 +12,18 @@ import {
   query,
 } from "firebase/firestore";
 import { formatData } from "../utils/data";
+import { Modal } from "../components/Modal";
+import { FormField } from "../components/FormField";
+import { SubmitButton } from "../components/SubmitButton";
+import { OsModal } from "../components/OsModal";
 
 export default function ChecklistPage() {
   const [checklists, setChecklists] = useState([]);
   const [filtroPlaca, setFiltroPlaca] = useState("");
   const [filtroMotorista, setFiltroMotorista] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Modal OS
+  const { usuario } = useAuth();
+  const { empresa } = useEmpresa();
   const [modalOSAberto, setModalOSAberto] = useState(false);
   const [osChecklistId, setOsChecklistId] = useState(null);
   const [fornecedores, setFornecedores] = useState([]);
@@ -27,7 +34,6 @@ export default function ChecklistPage() {
     defeitosSelecionados: [],
   });
 
-  // Carrega fornecedores para modal OS
   const carregarFornecedores = async () => {
     try {
       const q = query(collection(db, "fornecedores"));
@@ -40,7 +46,6 @@ export default function ChecklistPage() {
     }
   };
 
-  // Carrega checklists com filtros
   const carregarChecklists = async () => {
     setLoading(true);
     try {
@@ -58,6 +63,7 @@ export default function ChecklistPage() {
           ch.motorista?.toLowerCase().includes(filtroMotorista.toLowerCase())
         );
       }
+
       setChecklists(dados);
     } catch (error) {
       console.error("Erro ao carregar checklists", error);
@@ -71,7 +77,6 @@ export default function ChecklistPage() {
     carregarFornecedores();
   }, []);
 
-  // Abrir modal para criar/editar OS e definir checklistId
   const abrirModalOS = (checklist) => {
     if (checklist.osCriada && checklist.osDetalhes) {
       setOsDados({
@@ -92,33 +97,31 @@ export default function ChecklistPage() {
     setModalOSAberto(true);
   };
 
-  // Fechar modal
   const fecharModalOS = () => {
     setModalOSAberto(false);
     setOsChecklistId(null);
+    setOsDados({
+      oficina: "",
+      dataAgendada: "",
+      horario: "",
+      defeitosSelecionados: [],
+    });
   };
 
-  // Salvar OS no checklist (criar ou atualizar)
   const salvarOS = async () => {
     if (!osDados.oficina || !osDados.dataAgendada || !osDados.horario) {
-      alert(
-        "Por favor, preencha todos os campos obrigatórios (Oficina, Data e Horário)."
-      );
+      alert("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
-    if (!osDados.defeitosSelecionados || osDados.defeitosSelecionados.length === 0) {
-      alert("Por favor, selecione ao menos um defeito relatado.");
+    if (!osDados.defeitosSelecionados.length) {
+      alert("Selecione ao menos um defeito relatado.");
       return;
     }
     try {
       const checklistRef = doc(db, "checklists", osChecklistId);
-
-      // Pega o documento atual para preservar dados importantes
       const docSnap = await getDoc(checklistRef);
       let dadosAtuais = {};
-      if (docSnap.exists()) {
-        dadosAtuais = docSnap.data();
-      }
+      if (docSnap.exists()) dadosAtuais = docSnap.data();
 
       await updateDoc(checklistRef, {
         osCriada: true,
@@ -140,7 +143,6 @@ export default function ChecklistPage() {
     }
   };
 
-  // Dar baixa na OS e checklist como concluído
   const darBaixaOS = async (checklistId) => {
     try {
       const checklistRef = doc(db, "checklists", checklistId);
@@ -157,10 +159,10 @@ export default function ChecklistPage() {
     }
   };
 
-  // Imprimir checklist (sem alterações)
   const imprimirChecklist = (checklist) => {
     const janela = window.open("", "_blank");
     const html = `
+        
       <html>
       <head>
         <title>Checklist - ${checklist.placa}</title>
@@ -259,152 +261,192 @@ export default function ChecklistPage() {
     janela.document.close();
   };
 
-  // Imprimir OS (mostra dados da OS incluindo defeitos selecionados)
   const imprimirOS = (checklist) => {
     if (!checklist.osCriada) {
       alert("Esta checklist ainda não tem OS criada.");
       return;
     }
 
-
     const os = checklist.osDetalhes || {};
-
-    const dataAgendadaStr = os.dataAgendada
-      ? new Date(os.dataAgendada).toLocaleDateString()
-      : "N/A";
-
-    const defeitosList = Array.isArray(os.defeitos) && os.defeitos.length > 0
-      ? `<ul>${os.defeitos.map((d) => `<li>${d}</li>`).join("")}</ul>`
-      : "<p>Nenhum defeito selecionado.</p>";
-
+    const defeitos = os.defeitosSelecionados || [];
+    const itensUsados = os.itensUsados || [];
+    const totalGeral = (os.totalGeral ?? 0).toFixed(2);
+    const desconto = (os.desconto ?? 0).toFixed(2);
+  const janela = window.open("", "_blank");
     const html = `
-      <html>
-      <head>
-        <title>Ordem de Serviço - ${checklist.placa}</title>
-        <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            margin: 30px;
-          }
-          h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #2980b9;
-            padding-bottom: 8px;
-            font-weight: 700;
-          }
-          .container {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
-          }
-          p {
-            font-size: 16px;
-            line-height: 1.5;
-            margin: 8px 0;
-          }
-          strong {
-            color: #2980b9;
-            width: 140px;
-            display: inline-block;
-          }
-          ul {
-            margin: 0;
-            padding-left: 18px;
-          }
-          li {
-            margin-bottom: 4px;
-          }
-          hr {
-            margin: 20px 0;
-            border: none;
-            border-top: 1px solid #ddd;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h2>Ordem de Serviço </h2>
-          <p><strong>Placa:</strong> ${checklist.placa || "N/A"}</p>
-          <p><strong>Status OS:</strong> ${checklist.statusOS || "Não definida"}</p>
-          <p><strong>Data Criação OS:</strong> ${
-            checklist.dataOSCriada
-              ? new Date(checklist.dataOSCriada.seconds * 1000).toLocaleString()
-              : "N/A"
-          }</p>
-          <hr/>
-          <p><strong>Oficina:</strong> ${os.oficina || "N/A"}</p>
-          <p><strong>Data Agendada:</strong> ${dataAgendadaStr}</p>
-          <p><strong>Horário:</strong> ${os.horario || "N/A"}</p>
-          <p><strong>Serviços:</strong></p>
-          ${defeitosList}
-        </div>
-      </body>
-      </html>
-    `;
+  <html>
+    <head>
+      <title>OS - ${checklist.placa}</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          margin: 20px;
+          color: #333;
+          border: 1px solid #ccc;
+         
+        }
+         div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+   gap:10px;
+}
+   img{
+   width:160px;
+    margin-left: 60px;
+   }
+        h2 {
+          text-align: center;
+          color: #2c3e50;
+          margin-bottom: 30px;
+         
+        }
+        p ,h3{
+          font-size: 16px;
+          padding-left: 70px;
+          margin-top: 20px;
+        }
+        b {
+          color: #34495e;
+        }
+        ul {
+          list-style-type: disc;
+          padding-left: 100px;
+          margin-bottom: 20px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          margin-bottom: 20px;
+        }
+        table, th, td {
+          border: 1px solid #6b6666;
+        }
+        th, td {
+          padding: 10px;
+          text-align: left;
+        }
+        th {
+          background-color: #f2f2f2;
+          color: #2c3e50;
+        }
+        tfoot td {
+          font-weight: bold;
+        }
+        .assinaturas {
+          margin-top: 40px;
+          display: flex;
+          gap:80px;
+          justify-content: space-evelyn;
+        }
+        .assinatura {
+          width: 20%;
+          text-align: center;
+        }
+        .linha-assinatura {
+          margin-top: 60px;
+          border-top: 1px solid #000;
+          padding-top: 5px;
+        }
+        .footer {
+         width: 100%;
+          margin-top: 60px;
+          text-align: center;
+          font-size: 14px;
+          color: #888;
+        }
+      </style>
+    </head>
+    <body>
+      <h3>Ordem de Serviço</h3>
+      <div>
+      
+      <img src=${empresa.logoURL} alt="Logo" } />
+      <h2><b>${empresa.nome}</b> </h2>
+       </div>
+    
+      <p><b>Placa:</b> ${checklist.placa}</p>
+      <p><b>Status OS:</b> ${checklist.statusOS || "N/A"}</p>
+      <p><b>Oficina:</b> ${os.oficina}</p>
+      <p><b>Data Agendada:</b> ${formatData(os.dataAgendada)}</p>
+      <p><b>Horário:</b> ${os.horario}</p>
 
-    const janela = window.open("", "_blank");
+      <p><b>Defeitos Relatados:</b></p>
+      ${
+        defeitos.length > 0
+          ? `<ul>${defeitos
+              .map(
+                (d) =>
+                  `<li><strong>${d.item}</strong> — <em>${
+                    d.observacao || ""
+                  }</em></li>`
+              )
+              .join("")}</ul>`
+          : "<p>Nenhum defeito relatado.</p>"
+      }
+
+      <div class="assinaturas">
+        <div class="assinatura">
+          <div class="linha-assinatura">Responsável da Empresa</div>
+        </div>
+        <div class="assinatura">
+          <div class="linha-assinatura">Responsável da Oficina</div>
+        </div>
+       
+      </div>
+
+      <div class="footer">
+        <h5>FuelTrack - Sistema de Gestão de Frotas</h5>
+        <h5>Gerado em: ${new Date().toLocaleString()}</h5>
+        <h5>Usuário: ${usuario.email}</h5>
+      </div>
+    </body>
+  </html>
+`;
+
+  
     janela.document.write(html);
-    janela.document.close();
+  janela.document.close();
+  janela.focus(); // opcional, para garantir foco
+  janela.print(); // chama a impressão automaticamente
+    
   };
 
+  const checklistAtual = checklists.find((ch) => ch.id === osChecklistId);
+  const defeitosDisponiveis = checklistAtual?.respostas
+    ? Object.entries(checklistAtual.respostas)
+        .filter(([_, resp]) => resp.status === "defeito")
+        .map(([item, resp]) => ({ item, observacao: resp.observacao }))
+    : [];
+  const buttonStyle = (bgColor) => ({
+    backgroundColor: bgColor,
+    color: "#fff",
+    border: "none",
+    borderRadius: 4,
+    padding: "6px 10px",
+    cursor: "pointer",
+    fontSize: 13,
+    transition: "background-color 0.3s",
+  });
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: "20px auto",
-        padding: 20,
-        backgroundColor: "#fff",
-        borderRadius: 8,
-      }}
-    >
-      <h1>Lista de Checklists</h1>
+    <div style={{ padding: 24 }}>
+      <h1>Checklists</h1>
 
-      <div
-        style={{
-          marginBottom: 20,
-          display: "flex",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <input
           type="text"
           placeholder="Filtrar por placa"
           value={filtroPlaca}
           onChange={(e) => setFiltroPlaca(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", flexGrow: 1 }}
         />
         <input
           type="text"
           placeholder="Filtrar por motorista"
           value={filtroMotorista}
           onChange={(e) => setFiltroMotorista(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", flexGrow: 1 }}
         />
-        <button
-          onClick={carregarChecklists}
-          style={{
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#4df55b",
-          color: "#1e1f3b",
-          fontWeight:"900",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box"}}
-        >
-          Aplicar Filtros
-        </button>
+        <button onClick={carregarChecklists}>Aplicar Filtros</button>
       </div>
 
       {loading ? (
@@ -412,307 +454,121 @@ export default function ChecklistPage() {
       ) : checklists.length === 0 ? (
         <p>Nenhum checklist encontrado.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#eee" }}>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Placa</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Motorista</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Tipo</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Data</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>OS Criada</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Status OS</th>
-              <th style={{ border: "1px solid #ddd", padding: 8 }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {checklists.map((ch) => (
-              <tr key={ch.id} style={{ borderBottom: "1px solid #ccc" }}>
-                <td style={{ padding: 8 }}>{ch.placa || "-"}</td>
-                <td style={{ padding: 8 }}>{ch.motorista || "-"}</td>
-                <td style={{ padding: 8 }}>{ch.tipo}</td>
-                <td style={{ padding: 8 }}>{formatData(ch.dataRegistro)}</td>
-                <td style={{ padding: 8 }}>{ch.osCriada ? "Sim" : "Não"}</td>
-                <td style={{ padding: 8 }}>{ch.statusOS || "-"}</td>
-                <td
-                  style={{
-                    padding: 8,
-                    display: "flex",
-                    gap: 8,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {!ch.osCriada && (
-                    <button
-                      onClick={() => abrirModalOS(ch)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#007bff",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 4,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Criar OS
-                    </button>
-                  )}
-                  <button
-                    onClick={() => imprimirChecklist(ch)}
-                    style={{
-                      padding: "6px 12px",
-                      backgroundColor: "#28a745",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Imprimir Checklist
-                  </button>
-                  {ch.osCriada && (
-                    <>
-                      <button
-                        onClick={() => abrirModalOS(ch)}
-                        style={{
-                          padding: "6px 12px",
-                          backgroundColor: "#ffc107",
-                          color: "#000",
-                          border: "none",
-                          borderRadius: 4,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Editar OS
-                      </button>
-                      <button
-                        onClick={() => imprimirOS(ch)}
-                        style={{
-                          padding: "6px 12px",
-                          backgroundColor: "#17a2b8",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 4,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Imprimir OS
-                      </button>
-                      {ch.statusOS !== "concluida" && (
-                        <button
-                          onClick={() => darBaixaOS(ch.id)}
-                          style={{
-                            padding: "6px 12px",
-                            backgroundColor: "#dc3545",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 4,
-                            cursor: "pointer",
-                          }}
-                        >
-                          Dar Baixa OS
-                        </button>
-                      )}
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Modal OS */}
-      {modalOSAberto && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-            padding: 20,
-          }}
-          onClick={fecharModalOS}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
+        <div style={{ overflowX: "auto" }}>
+          <table
+            border={0}
+            cellPadding={10}
+            cellSpacing={0}
             style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
               backgroundColor: "#fff",
               borderRadius: 8,
-              padding: 24,
-              maxWidth: 500,
-              width: "100%",
-              boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+              overflow: "hidden",
+              minWidth: 800,
             }}
           >
-            <h2 style={{ marginTop: 0, marginBottom: 20, color: "#007bff" }}>
-              {osChecklistId && checklists.find(ch => ch.id === osChecklistId)?.osCriada
-                ? "Editar Ordem de Serviço"
-                : "Criar Ordem de Serviço"}
-            </h2>
-
-            <label style={{ display: "block", marginBottom: 12 }}>
-              Oficina <span style={{ color: "red" }}>*</span>
-              <select
-                value={osDados.oficina}
-                onChange={(e) => setOsDados({ ...osDados, oficina: e.target.value })}
+            <thead>
+              <tr
                 style={{
-                  width: "100%",
-                  padding: 8,
-                  marginTop: 6,
-                  borderRadius: 6,
-                  border: "1px solid #ccc",
-                }}
-              >
-                <option value="">Selecione uma oficina</option>
-                {fornecedores.map((f) => (
-                  <option key={f.id} value={f.nome}>
-                    {f.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label style={{ display: "block", marginBottom: 12 }}>
-              Data Agendada <span style={{ color: "red" }}>*</span>
-              <input
-                type="date"
-                value={osDados.dataAgendada}
-                onChange={(e) => setOsDados({ ...osDados, dataAgendada: e.target.value })}
-                style={{
-                  width: "100%",
-                  padding: 8,
-                  marginTop: 6,
-                  borderRadius: 6,
-                  border: "1px solid #ccc",
-                }}
-              />
-            </label>
-
-            <label style={{ display: "block", marginBottom: 12 }}>
-              Horário <span style={{ color: "red" }}>*</span>
-              <input
-                type="time"
-                value={osDados.horario}
-                onChange={(e) => setOsDados({ ...osDados, horario: e.target.value })}
-                style={{
-                  width: "100%",
-                  padding: 8,
-                  marginTop: 6,
-                  borderRadius: 6,
-                  border: "1px solid #ccc",
-                }}
-              />
-            </label>
-
-            {/* Multiselect defeitos */}
-            <label style={{ display: "block", marginBottom: 12 }}>
-              Defeitos relatados <span style={{ color: "red" }}>*</span>
-              <div
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 6,
-                  maxHeight: 120,
-                  overflowY: "auto",
-                  padding: 8,
-                  marginTop: 6,
-                }}
-              >
-                {(() => {
-                  // Pega checklist atual para pegar os defeitos
-                  const checklistAtual = checklists.find((ch) => ch.id === osChecklistId);
-                  if (!checklistAtual || !checklistAtual.respostas) {
-                    return (
-                      <p style={{ fontStyle: "italic", color: "#999" }}>
-                        Nenhum defeito encontrado no checklist.
-                      </p>
-                    );
-                  }
-                  const defeitosDisponiveis = Object.entries(checklistAtual.respostas)
-                    .filter(([_, resp]) => resp.status === "defeito")
-                    .map(([item]) => item);
-
-                  if (defeitosDisponiveis.length === 0) {
-                    return (
-                      <p style={{ fontStyle: "italic", color: "#999" }}>
-                        Nenhum defeito encontrado no checklist.
-                      </p>
-                    );
-                  }
-
-                  return defeitosDisponiveis.map((defeito) => (
-                    <div key={defeito} style={{ marginBottom: 4 }}>
-                      <label style={{ cursor: "pointer", userSelect: "none" }}>
-                        <input
-                          type="checkbox"
-                          checked={
-                            Array.isArray(osDados.defeitosSelecionados) &&
-                            osDados.defeitosSelecionados.includes(defeito)
-                          }
-                          onChange={() => {
-                            let novosDefeitos = Array.isArray(osDados.defeitosSelecionados)
-                              ? [...osDados.defeitosSelecionados]
-                              : [];
-                            if (novosDefeitos.includes(defeito)) {
-                              novosDefeitos = novosDefeitos.filter((d) => d !== defeito);
-                            } else {
-                              novosDefeitos.push(defeito);
-                            }
-                            setOsDados({ ...osDados, defeitosSelecionados: novosDefeitos });
-                          }}
-                          style={{ marginRight: 8 }}
-                        />
-                        {defeito}
-                      </label>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </label>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 12,
-                marginTop: 20,
-              }}
-            >
-              <button
-                onClick={fecharModalOS}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#6c757d",
-                  border: "none",
-                  borderRadius: 6,
+                  backgroundColor: "#2c3e50",
                   color: "#fff",
-                  cursor: "pointer",
+                  textAlign: "left",
+                  fontWeight: "bold",
                 }}
               >
-                Cancelar
-              </button>
-              <button
-                onClick={salvarOS}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#007bff",
-                  border: "none",
-                  borderRadius: 6,
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Salvar OS
-              </button>
-            </div>
-          </div>
+                <th style={{ padding: "12px 16px" }}>Placa</th>
+                <th style={{ padding: "12px 16px" }}>Motorista</th>
+                <th style={{ padding: "12px 16px" }}>Tipo</th>
+                <th style={{ padding: "12px 16px" }}>Data</th>
+                <th style={{ padding: "12px 16px" }}>OS Criada</th>
+                <th style={{ padding: "12px 16px" }}>Status OS</th>
+                <th style={{ padding: "12px 16px" }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checklists.map((ch, index) => (
+                <tr
+                  key={ch.id}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff",
+                    borderBottom: "1px solid #ddd",
+                  }}
+                >
+                  <td style={{ padding: "12px 16px" }}>{ch.placa}</td>
+                  <td style={{ padding: "12px 16px" }}>{ch.motorista}</td>
+                  <td style={{ padding: "12px 16px" }}>{ch.tipo}</td>
+                  <td style={{ padding: "12px 16px" }}>
+                    {formatData(ch.dataRegistro)}
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
+                    {ch.osCriada ? "Sim" : "Não"}
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>{ch.statusOS || "-"}</td>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {!ch.osCriada && (
+                      <button
+                        onClick={() => abrirModalOS(ch)}
+                        style={buttonStyle("#3498db")}
+                      >
+                        Criar OS
+                      </button>
+                    )}
+                    <button
+                      onClick={() => imprimirChecklist(ch)}
+                      style={buttonStyle("#2ecc71")}
+                    >
+                      Imprimir
+                    </button>
+                    {ch.osCriada && (
+                      <>
+                        <button
+                          onClick={() => abrirModalOS(ch)}
+                          style={buttonStyle("#f39c12")}
+                        >
+                          Editar OS
+                        </button>
+                        <button
+                          onClick={() => imprimirOS(ch)}
+                          style={buttonStyle("#9b59b6")}
+                        >
+                          Imprimir OS
+                        </button>
+                        {ch.statusOS !== "concluida" && (
+                          <button
+                            onClick={() => darBaixaOS(ch.id)}
+                            style={buttonStyle("#e74c3c")}
+                          >
+                            Dar Baixa
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      <OsModal
+        isOpen={modalOSAberto}
+        onClose={fecharModalOS}
+        checklistId={osChecklistId}
+        fornecedores={fornecedores}
+        onSaved={carregarChecklists}
+        defeitosDisponiveis={defeitosDisponiveis}
+        modoSimplificado={true}
+      />
     </div>
   );
 }

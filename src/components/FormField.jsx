@@ -15,15 +15,23 @@ export const FormField = ({
     width: "100%",
     boxSizing: "border-box",
     borderRadius: "4px",
-    border: "1px solid #ccc",
+    border: "1px solid #011468",
     fontSize: "14px",
     height: "38px",
   };
 
   const registered = register ? register(name) : {};
 
+  // Remove duplicatas de options com base no valor
+  const uniqueOptions = options
+    ? options.filter(
+        (opt, index, self) =>
+          index === self.findIndex((o) => o.value === opt.value)
+      )
+    : [];
+
   return (
-    <div style={{ minWidth: "300px", marginBottom: "15px" }}>
+    <div style={{ marginBottom: "15px", width: "300px" }}>
       {label && (
         <label
           htmlFor={name}
@@ -42,9 +50,9 @@ export const FormField = ({
           list={listId}
         >
           {children ||
-            options?.map((opt, i) => (
-              <option key={i} value={opt}>
-                {opt}
+            uniqueOptions.map((opt, i) => (
+              <option key={`${name}-${opt.value}-${i}`} value={opt.value}>
+                {opt.label}
               </option>
             ))}
         </select>
@@ -71,10 +79,10 @@ export const FormField = ({
         <span style={{ color: "red", fontSize: "12px" }}>{error.message}</span>
       )}
 
-      {options && listId && (
+      {uniqueOptions.length > 0 && listId && (
         <datalist id={listId}>
-          {options.map((opt, i) => (
-            <option key={i} value={opt} />
+          {uniqueOptions.map((opt, i) => (
+            <option key={`${name}-datalist-${opt.value}-${i}`} value={opt.value} />
           ))}
         </datalist>
       )}

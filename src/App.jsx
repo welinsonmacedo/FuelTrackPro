@@ -36,6 +36,7 @@ import DashboardKPIs from "./pages/DashboardKPI";
 import FinanceiroPage from "./pages/FinanceiroPage";
 import RelatoriosFinanceirosPage from "./pages/RelatoriosFinanceirosPage";
 import FinanceiroPageCadastro from "./pages/FinanceiroPageCadastro";
+import { NotasPage } from "./pages/NotasPage";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -106,7 +107,9 @@ function AppWrapper() {
         <Route path="financeiro" element={<FinanceiroPage/>} />
         <Route path="relatorio-financeiro" element={<RelatoriosFinanceirosPage/>} />
         <Route path="financeiro-cadastro" element={<FinanceiroPageCadastro/>} />
+        <Route path="financeiro-notas-os" element={<NotasPage/>} />
       </Route>
+
 
       {/* Admin Routes separadas com layout próprio (caso queira reutilizar o Layout) */}
       <Route path="/admin" element={<AdminRoutes />}>

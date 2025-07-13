@@ -13,6 +13,8 @@ import {
 import { viagensSchema } from "../schemas/viagemSchema";
 import { useViagens } from "../hooks/useViagens";
 import { useAbastecimentos } from "../hooks/useAbastecimentos";
+import { useMotoristas } from "../hooks/useMotoristas";
+import { useVeiculos } from "../hooks/useVeiculos";
 import { useRotas } from "../hooks/useRotas";
 import { FormField } from "../components/FormField";
 import { Modal } from "../components/Modal";
@@ -26,10 +28,12 @@ import { SearchInput } from "../components/SearchInput";
 import ChecklistViagem from "./ChecklistViagem";
 
 const ViagensList = ({ mostrarCadastrar = true }) => {
-  const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
+  const { viagens, adicionarViagem, editarViagem, excluirViagem } =
+    useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
-
+  const { motoristas } = useMotoristas();
+  const { veiculos } = useVeiculos();
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -65,11 +69,12 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   } = useForm({ resolver: yupResolver(viagensSchema) });
 
   // Placas e motoristas disponíveis para selects
+
   const placasDisponiveis = [
-    ...new Set(abastecimentos.map((ab) => ab.placa).filter(Boolean)),
+    ...new Set(veiculos.map((ab) => ab.placa).filter(Boolean)),
   ];
   const motoristasDisponiveis = [
-    ...new Set(abastecimentos.map((ab) => ab.motorista).filter(Boolean)),
+    ...new Set(motoristas.map((m) => m.nome).filter(Boolean)),
   ];
 
   // Form reset quando abrir/fechar modal
@@ -214,7 +219,11 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
           console.log(`Resultados para ${viagem.id}`, checklists.length);
           resultados[viagem.id] = checklists;
         } catch (error) {
-          console.error("Erro ao buscar checklists para viagem", viagem.id, error);
+          console.error(
+            "Erro ao buscar checklists para viagem",
+            viagem.id,
+            error
+          );
           resultados[viagem.id] = [];
         }
       }
@@ -368,12 +377,13 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             <ListItem
               key={v.id}
               title={`${v.placa} - ${v.motorista}`}
-              subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(
-                v.dataInicio,
-                v.dataFim
-              )}`}
+              subtitle={`Destino: ${v.rota} | KM: ${
+                v.km
+              } | Período: ${formatarPeriodo(v.dataInicio, v.dataFim)}`}
               onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
-              onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
+              onDelete={
+                mostrarCadastrar ? () => setConfirmarId(v.id) : undefined
+              }
               actions={[
                 {
                   label: "Vincular",
@@ -385,10 +395,13 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
                 },
                 {
                   label: "Checklist Início",
-                  onClick: () => setViagemChecklist({ viagem: v, tipo: "inicio" }),
+                  onClick: () =>
+                    setViagemChecklist({ viagem: v, tipo: "inicio" }),
                   style: {
                     backgroundColor: temChecklistInicio ? "#aaa" : "#f39c12",
-                    border: `1px solid ${temChecklistInicio ? "#999" : "#f39c12"}`,
+                    border: `1px solid ${
+                      temChecklistInicio ? "#999" : "#f39c12"
+                    }`,
                   },
                   disabled: temChecklistInicio,
                 },
@@ -409,6 +422,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
       {confirmarId && (
         <ConfirmDialog
+          isOpen={!!confirmarId} 
           title="Excluir viagem"
           message="Tem certeza que deseja excluir esta viagem?"
           onConfirm={handleConfirmDelete}
@@ -419,7 +433,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
-        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
+        title={`Vincular Abastecimentos - Viagem ${
+          viagemParaVincular?.placa || ""
+        }`}
       >
         <div>
           <h3>Abastecimentos disponíveis para vincular:</h3>
@@ -504,7 +520,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         <Modal
           isOpen={true}
           onClose={() => setViagemChecklist(null)}
-          title={`Checklist de ${viagemChecklist.tipo === "inicio" ? "Início" : "Fim"} - ${viagemChecklist.viagem?.placa}`}
+          title={`Checklist de ${
+            viagemChecklist.tipo === "inicio" ? "Início" : "Fim"
+          } - ${viagemChecklist.viagem?.placa}`}
         >
           <ChecklistViagem
             tipo={viagemChecklist.tipo}
