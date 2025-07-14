@@ -6,6 +6,7 @@ import { useVeiculos } from "../hooks/useVeiculos";
 import { useMotoristas } from "../hooks/useMotoristas";
 import { useMediasGeral } from "../hooks/useMediasGeral";
 import { useMedias } from "../hooks/useMedias";
+import { useFinanceiro } from "../hooks/useFinanceiro";
 import Card from "../components/Card";
 import { formatCurrency, calcularMediaConsumo } from "../utils/data";
 
@@ -14,13 +15,13 @@ const DashboardKPIs = () => {
   const { checklists = [] } = useChecklists();
   const { veiculos = [] } = useVeiculos();
   const { motoristas = [] } = useMotoristas();
+  const { medias, loading } = useMedias();
+
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const { mediaGeral, loading: loadingMediaGeral } = useMediasGeral(
-    dataInicio,
-    dataFim
-  );
-  const { medias, loading } = useMedias();
+
+  const { mediaGeral, loading: loadingMediaGeral } = useMediasGeral(dataInicio, dataFim);
+  const { despesas = [], loading: loadingFinanceiro } = useFinanceiro({ dataInicio, dataFim });
 
   const filtrarPorData = (items, campoData = "data") => {
     return items.filter((item) => {
@@ -37,20 +38,11 @@ const DashboardKPIs = () => {
         return false;
       }
 
-      const dataDia = new Date(
-        dataItem.getFullYear(),
-        dataItem.getMonth(),
-        dataItem.getDate()
-      );
+      const dataDia = new Date(dataItem.getFullYear(), dataItem.getMonth(), dataItem.getDate());
 
-      if (dataInicio) {
-        const inicio = new Date(dataInicio);
-        if (dataDia < inicio) return false;
-      }
-      if (dataFim) {
-        const fim = new Date(dataFim);
-        if (dataDia > fim) return false;
-      }
+      if (dataInicio && dataDia < new Date(dataInicio)) return false;
+      if (dataFim && dataDia > new Date(dataFim)) return false;
+
       return true;
     });
   };
@@ -59,42 +51,63 @@ const DashboardKPIs = () => {
     () => filtrarPorData(abastecimentos, "data"),
     [abastecimentos, dataInicio, dataFim]
   );
-  const mediasFiltradas = useMemo(
-    () => filtrarPorData(medias, "data"),
-    [medias, dataInicio, dataFim]
+
+  const despesasFiltradas = useMemo(
+    () => filtrarPorData(despesas, "data"),
+    [despesas, dataInicio, dataFim]
   );
+
   const checklistsFiltrados = useMemo(
     () => filtrarPorData(checklists, "dataRegistro"),
     [checklists, dataInicio, dataFim]
+  );
+
+  const mediasFiltradas = useMemo(
+    () => filtrarPorData(medias, "data"),
+    [medias, dataInicio, dataFim]
   );
 
   const totalLitros = useMemo(
     () => abastecimentosFiltrados.reduce((acc, a) => acc + (a.litros || 0), 0),
     [abastecimentosFiltrados]
   );
-  const totalValor = useMemo(
-    () =>
-      abastecimentosFiltrados.reduce(
-        (acc, a) => acc + (a.litros * a.valorLitro || 0),
-        0
-      ),
+
+  const totalAbastecimento = useMemo(
+    () => abastecimentosFiltrados.reduce((acc, a) => acc + (a.litros * a.valorLitro || 0), 0),
     [abastecimentosFiltrados]
   );
+
+  const totalDespesas = useMemo(
+    () => despesasFiltradas.reduce((acc, d) => acc + (d.valor || 0), 0),
+    [despesasFiltradas]
+  );
+
+  const totalGastoGeral = totalAbastecimento + totalDespesas;
 
   const mediaConsumo = useMemo(() => {
     const mediasCalc = calcularMediaConsumo(abastecimentosFiltrados);
     return mediasCalc.geral;
   }, [abastecimentosFiltrados]);
 
-  const gastoPorVeiculo = useMemo(() => {
-    const map = {};
-    abastecimentosFiltrados.forEach((a) => {
-      if (!a.placa) return;
-      if (!map[a.placa]) map[a.placa] = 0;
-      map[a.placa] += a.litros * a.valorLitro;
-    });
-    return Object.entries(map).map(([placa, valor]) => ({ placa, valor }));
-  }, [abastecimentosFiltrados]);
+ const gastoPorVeiculo = useMemo(() => {
+  const mapa = {};
+
+  // Abastecimentos por placa
+  abastecimentosFiltrados.forEach((a) => {
+    if (!a.placa) return;
+    if (!mapa[a.placa]) mapa[a.placa] = 0;
+    mapa[a.placa] += a.litros * a.valorLitro;
+  });
+
+  // Despesas financeiras por placa
+  despesasFiltradas.forEach((d) => {
+    if (!d.placa) return;
+    if (!mapa[d.placa]) mapa[d.placa] = 0;
+    mapa[d.placa] += d.valor || 0;
+  });
+
+  return Object.entries(mapa).map(([placa, valor]) => ({ placa, valor }));
+}, [abastecimentosFiltrados, despesasFiltradas]);
 
   const ranking = useMemo(() => {
     const map = {};
@@ -113,7 +126,7 @@ const DashboardKPIs = () => {
       .sort((a, b) => b.mediaGeral - a.mediaGeral);
   }, [mediasFiltradas]);
 
-  if (loading) return <p>Carregando ranking...</p>;
+  if (loading) return <p>Carregando dados...</p>;
 
   return (
     <div
@@ -127,14 +140,7 @@ const DashboardKPIs = () => {
         minHeight: "100vh",
       }}
     >
-      <h2
-        style={{
-          fontSize: 28,
-          fontWeight: 600,
-          marginBottom: 30,
-          color: "#333",
-        }}
-      >
+      <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 30, color: "#333" }}>
         📊 Painel de Indicadores - Frota
       </h2>
 
@@ -192,7 +198,7 @@ const DashboardKPIs = () => {
         }}
       >
         <Card title="Gasto Total">
-          <p>{formatCurrency(totalValor)}</p>
+          <p>{formatCurrency(totalGastoGeral)}</p>
         </Card>
         <Card title="Total de Litros">
           <p>{totalLitros.toFixed(2)} L</p>

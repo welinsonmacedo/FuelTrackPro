@@ -3,6 +3,7 @@ import { useMotoristas } from "../hooks/useMotoristas"; // seu hook para motoris
 import { SearchInput } from "../components/SearchInput";
 import Card from "../components/Card";
 import { InfoRow } from "../components/InfoRow";
+import { formatData } from "../utils/data";
 
 const MotoristasConsulta = () => {
   const { motoristas = [], loading } = useMotoristas();
@@ -65,10 +66,10 @@ const MotoristasConsulta = () => {
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
                 <InfoRow label="CNH" value={m.cnh || "-"} />
                 <InfoRow label="Categoria" value={m.categoria || "-"} />
-                <InfoRow label="Data Emissão CNH" value={m.dataEmissaoCNH || "-"} />
-                <InfoRow label="Data Validade CNH" value={m.dataValidadeCNH || "-"} />
+                <InfoRow label="Data Emissão CNH" value={formatData( m.dataEmissao || "-")} />
+                <InfoRow label="Data Validade CNH" value={formatData( m.dataValidade || "-")} />
                 <InfoRow label="CPF" value={m.cpf || "-"} />
-                <InfoRow label="Telefone" value={m.telefone || "-"} />
+              
               </div>
             </Card>
           ))

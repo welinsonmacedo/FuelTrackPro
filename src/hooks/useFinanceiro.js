@@ -5,13 +5,15 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
+  Timestamp,
   addDoc,
   updateDoc,
   deleteDoc,
-  doc,
-  Timestamp,
 } from "firebase/firestore";
 
+// Hook para listar despesas
 export const useFinanceiro = (filtros) => {
   const [despesas, setDespesas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,10 +35,40 @@ export const useFinanceiro = (filtros) => {
         }
 
         const q = constraints.length ? query(ref, ...constraints) : ref;
-
         const snap = await getDocs(q);
-        const lista = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setDespesas(lista);
+        const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        // 🔧 Nova função para resolver a placa (OS ou item manual)
+        const resolvePlaca = async (d) => {
+          if (!d.placa && d.checklistId) {
+            try {
+              const checklistRef = doc(db, "checklists", d.checklistId);
+              const checklistSnap = await getDoc(checklistRef);
+              if (checklistSnap.exists()) {
+                const dadosChecklist = checklistSnap.data();
+                return {
+                  ...d,
+                  placa:
+                    dadosChecklist.placa ||
+                    dadosChecklist.osDetalhes?.placa ||
+                    "-",
+                };
+              }
+            } catch (e) {
+              console.warn("Erro ao buscar checklist:", e);
+            }
+          }
+
+          const placaFromItem = d.itens?.[0]?.placa?.trim();
+          return {
+            ...d,
+            placa: d.placa || placaFromItem || "-",
+          };
+        };
+
+        // Aplica a lógica de placa em todas as despesas
+        const listaComPlaca = await Promise.all(docs.map(resolvePlaca));
+        setDespesas(listaComPlaca);
       } catch (error) {
         console.error("Erro ao buscar despesas:", error);
       } finally {
@@ -45,10 +77,12 @@ export const useFinanceiro = (filtros) => {
     };
 
     fetchDespesas();
-  }, [filtros]); // só refaz quando filtros mudam
+  }, [filtros]);
 
   return { despesas, loading };
 };
+
+// Hook para criar nova despesa
 export const useCreateDespesa = () => {
   const create = async (data) => {
     try {
@@ -64,6 +98,7 @@ export const useCreateDespesa = () => {
   return create;
 };
 
+// Hook para atualizar despesa
 export const useUpdateDespesa = () => {
   const update = async (id, data) => {
     try {
@@ -76,6 +111,7 @@ export const useUpdateDespesa = () => {
   return update;
 };
 
+// Hook para deletar despesa
 export const useDeleteDespesa = () => {
   const remove = async (id) => {
     try {
