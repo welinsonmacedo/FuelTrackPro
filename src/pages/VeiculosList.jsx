@@ -13,14 +13,17 @@ import { Form } from "../components/Form";
 import { Modal } from "../components/Modal";
 
 const VeiculosList = () => {
-  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } = useVeiculos();
+  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } =
+    useVeiculos();
   const { log } = useAuditoria();
 
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [tituloForm, setTituloForm] = useState("Cadastro");
+  const [deleting, setDeleting] = useState(false);
   const [confirmarId, setConfirmarId] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   const filtrados = veiculos.filter(
     (v) =>
@@ -31,31 +34,36 @@ const VeiculosList = () => {
   const {
     register,
     handleSubmit,
+    watch,
     reset,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: yupResolver(veiculoSchema) });
+    formState: { errors, isSubmitting, isValid },
+  } = useForm({
+    resolver: yupResolver(veiculoSchema),
+    mode: "onChange",
+  });
+
+  const tipo = watch("tipo");
 
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
       setEditando(null);
-    } else {
-      if (editando) {
-        reset({
-          placa: editando.placa || "",
-          marca: editando.marca || "",
-          modelo: editando.modelo || "",
-          ano: editando.ano || "",
-          tipo: editando.tipo || "",
-          chassi: editando.chassi || "",
-          renavam: editando.renavam || "",
-          cor: editando.cor || "",
-          filial: editando.filial || "",
-          capacidadeTanque: editando.capacidadeTanque || "",
-        });
-      } else {
-        reset({});
-      }
+      setSubmitError(null);
+    } else if (editando) {
+      reset({
+        placa: editando.placa || "",
+        marca: editando.marca || "",
+        modelo: editando.modelo || "",
+        ano: editando.ano || "",
+        tipo: editando.tipo || "",
+        chassi: editando.chassi || "",
+        renavam: editando.renavam || "",
+        cor: editando.cor || "",
+        filial: editando.filial || "",
+        capacidadeTanque: editando.capacidadeTanque || null,
+        tipoCombustivel: editando.tipoCombustivel || "",
+        capacidadeCarga: editando.capacidadeCarga || null,
+      });
     }
   }, [mostrarForm, editando, reset]);
 
@@ -69,30 +77,55 @@ const VeiculosList = () => {
     setMostrarForm(false);
   };
 
-  const onSubmit = async (dados) => {
-    if (editando) {
-      const dadosAntes = editando;
-      await editarVeiculo(editando.id, dados);
-      await log(
-        "auditoriaVeiculos",
-        "Editar veículo",
-        "Atualizou dados do veículo",
-        dadosAntes,
-        dados,
-        "VeiculosList"
-      );
+  const prepararDadosParaEnvio = (dados) => {
+    const payload = { ...dados };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") payload[key] = null;
+    });
+
+    if (payload.tipo === "Carreta") {
+      payload.capacidadeTanque = null;
+      payload.tipoCombustivel = null;
     } else {
-      await adicionarVeiculo(dados);
-      await log(
-        "auditoriaVeiculos",
-        "Criar veículo",
-        "Cadastro de novo veículo",
-        null,
-        dados,
-        "VeiculosList"
-      );
+      payload.capacidadeCarga = null;
     }
-    fecharModal();
+
+    return payload;
+  };
+
+  const onSubmit = async (dados) => {
+    try {
+      setSubmitError(null);
+      const payload = prepararDadosParaEnvio(dados);
+
+      if (editando) {
+        await editarVeiculo(editando.id, payload);
+        await log(
+          "colecaoAuditoria",
+          "Editar veículo",
+          `Atualizou veículo ${editando.placa}`,
+          editando,
+          payload,
+          "VeiculosList"
+        );
+      } else {
+        await adicionarVeiculo(payload);
+        await log(
+          "colecaoAuditoria",
+          "Criar veículo",
+          `Cadastrou novo veículo ${payload.placa}`,
+          null,
+          payload,
+          "VeiculosList"
+        );
+      }
+
+      fecharModal();
+    } catch (error) {
+      console.error("Erro ao salvar veículo:", error);
+      setSubmitError(error.message || "Ocorreu um erro ao salvar o veículo");
+    }
   };
 
   const handleEdit = (item) => {
@@ -102,31 +135,28 @@ const VeiculosList = () => {
   };
 
   const handleConfirmDelete = async () => {
-    const dadosAntes = veiculos.find((v) => v.id === confirmarId);
-    await excluirVeiculo(confirmarId);
-    await log(
-      "auditoriaVeiculos",
-      "Excluir veículo",
-      "Removeu veículo",
-      dadosAntes,
-      null,
-      "VeiculosList"
-    );
-    setConfirmarId(null);
-  };
+    try {
+      setDeleting(true);
 
-  // Estilo para inputs lado a lado no modal
-  const linhaInputsStyle = {
-    display: "flex",
-    gap: "15px",
-    flexWrap: "wrap",
-    marginBottom: "15px",
-  };
+      const dadosAntes = veiculos.find((v) => v.id === confirmarId);
+      if (!dadosAntes) throw new Error("Veículo não encontrado");
 
-  // Estilo individual dos inputs para que fiquem lado a lado
-  const inputLadoALado = {
-    flex: "1 1 200px",
-    minWidth: "200px",
+      await excluirVeiculo(confirmarId);
+      await log(
+        "colecaoAuditoria",
+        "Excluir veículo",
+        `Removeu veículo ${dadosAntes.placa}`,
+        dadosAntes,
+        null,
+        "VeiculosList"
+      );
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      alert(`Erro: ${error.message}`);
+    } finally {
+      setDeleting(false);
+      setConfirmarId(null);
+    }
   };
 
   return (
@@ -137,7 +167,6 @@ const VeiculosList = () => {
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
-        boxSizing: "border-box",
       }}
     >
       <h2 style={{ marginBottom: "20px" }}>Veículos</h2>
@@ -155,102 +184,129 @@ const VeiculosList = () => {
           color: "#fff",
           width: "100%",
           maxWidth: "400px",
-          boxSizing: "border-box",
         }}
       >
         Cadastrar Veículo
       </button>
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Veículo`}>
-        <Form onSubmit={handleSubmit(onSubmit)} style={{ padding: 0, border: "none" }}>
-          <div style={linhaInputsStyle}>
-            <FormField
-              label="Placa"
-              name="placa"
-              register={register}
-              error={errors.placa}
-              inputStyle={inputLadoALado}
-            />
-            <FormField
-              label="Marca"
-              name="marca"
-              register={register}
-              error={errors.marca}
-              inputStyle={inputLadoALado}
-            />
-          </div>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Veículo`}
+      >
+        <Form
+          onSubmit={handleSubmit(onSubmit)}
+          style={{ padding: 0, border: "none" }}
+        >
+          {submitError && (
+            <div style={{ color: "red", marginBottom: "15px" }}>
+              {submitError}
+            </div>
+          )}
 
-          <div style={linhaInputsStyle}>
+          <FormField
+            label="Placa"
+            name="placa"
+            register={register}
+            error={errors.placa}
+          />
+          <FormField
+            label="Marca"
+            name="marca"
+            register={register}
+            error={errors.marca}
+          />
+          <FormField
+            label="Modelo"
+            name="modelo"
+            register={register}
+            error={errors.modelo}
+          />
+          <FormField
+            label="Ano"
+            name="ano"
+            type="number"
+            register={register}
+            error={errors.ano}
+          />
+          <FormField
+            label="Tipo"
+            name="tipo"
+            as="select"
+            register={register}
+            error={errors.tipo}
+          >
+            <option value="">Selecione</option>
+            <option value="Cavalo Mecânico">Cavalo Mecânico</option>
+            <option value="Truck">Truck</option>
+            <option value="Carreta">Carreta</option>
+            <option value="Popular">Popular</option>
+            <option value="3/4">3/4</option>
+          </FormField>
+          <FormField
+            label="Chassi"
+            name="chassi"
+            register={register}
+            error={errors.chassi}
+          />
+          <FormField
+            label="Renavam"
+            name="renavam"
+            register={register}
+            error={errors.renavam}
+          />
+          <FormField
+            label="Cor"
+            name="cor"
+            register={register}
+            error={errors.cor}
+          />
+          <FormField
+            label="Filial"
+            name="filial"
+            register={register}
+            error={errors.filial}
+          />
+
+          {tipo && tipo !== "Carreta" && (
+            <>
+              <FormField
+                label="Capacidade Tanque (L)"
+                name="capacidadeTanque"
+                type="number"
+                register={register}
+                error={errors.capacidadeTanque}
+              />
+              <FormField
+                label="Tipo de Combustível"
+                name="tipoCombustivel"
+                as="select"
+                register={register}
+                error={errors.tipoCombustivel}
+              >
+                <option value="">Selecione</option>
+                <option value="Diesel S10">Diesel S10</option>
+                <option value="Diesel Comum">Diesel Comum</option>
+                <option value="Gasolina">Gasolina</option>
+                <option value="Etanol">Etanol</option>
+              </FormField>
+            </>
+          )}
+
+          {tipo === "Carreta" && (
             <FormField
-              label="Modelo"
-              name="modelo"
-              register={register}
-              error={errors.modelo}
-              inputStyle={inputLadoALado}
-            />
-            <FormField
-              label="Ano"
-              name="ano"
+              label="Capacidade de Carga (kg)"
+              name="capacidadeCarga"
               type="number"
               register={register}
-              error={errors.ano}
-              inputStyle={inputLadoALado}
+              error={errors.capacidadeCarga}
             />
-          </div>
+          )}
 
-          <div style={linhaInputsStyle}>
-            <FormField
-              label="Tipo"
-              name="tipo"
-              register={register}
-              error={errors.tipo}
-              inputStyle={inputLadoALado}
-            />
-            <FormField
-              label="Chassi"
-              name="chassi"
-              register={register}
-              error={errors.chassi}
-              inputStyle={inputLadoALado}
-            />
-          </div>
-
-          <div style={linhaInputsStyle}>
-            <FormField
-              label="Renavam"
-              name="renavam"
-              register={register}
-              error={errors.renavam}
-              inputStyle={inputLadoALado}
-            />
-            <FormField
-              label="Cor"
-              name="cor"
-              register={register}
-              error={errors.cor}
-              inputStyle={inputLadoALado}
-            />
-          </div>
-
-          <div style={linhaInputsStyle}>
-            <FormField
-              label="Filial"
-              name="filial"
-              register={register}
-              error={errors.filial}
-              inputStyle={inputLadoALado}
-            />
-            <FormField
-              label="Capacidade Tanque (L)"
-              name="capacidadeTanque"
-              type="number"
-              register={register}
-              error={errors.capacidadeTanque}
-              inputStyle={inputLadoALado}
-            />
-          </div>
-
-          <SubmitButton loading={isSubmitting}>
+          <SubmitButton
+            loading={isSubmitting}
+            disabled={!isValid || isSubmitting}
+          >
             {editando ? "Atualizar" : "Cadastrar"}
           </SubmitButton>
         </Form>
@@ -267,7 +323,6 @@ const VeiculosList = () => {
           maxWidth: "400px",
           borderRadius: "6px",
           border: "1px solid #ccc",
-          boxSizing: "border-box",
         }}
       />
 
@@ -276,9 +331,12 @@ const VeiculosList = () => {
           <ListItem
             key={v.id}
             title={`${v.placa} - ${v.modelo || ""}`}
-            subtitle={`Marca: ${v.marca || "-"} | Tipo: ${v.tipo || "-"} | Capacidade Tanque: ${v.capacidadeTanque || "-"} L`}
+            subtitle={`Tipo: ${v.tipo || "-"} | Combustível: ${
+              v.tipoCombustivel || "-"
+            }`}
             onEdit={() => handleEdit(v)}
             onDelete={() => setConfirmarId(v.id)}
+            isDeleting={deleting && confirmarId === v.id}
             style={{ marginBottom: "12px" }}
           />
         ))}
@@ -286,10 +344,12 @@ const VeiculosList = () => {
 
       {confirmarId !== null && (
         <ConfirmDialog
+          isOpen={confirmarId !== null} // aqui já tá certo
           title="Excluir veículo"
-          message="Tem certeza que deseja excluir este veículo?"
+          message="Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita."
           onConfirm={handleConfirmDelete}
           onCancel={() => setConfirmarId(null)}
+          loading={deleting}
         />
       )}
     </div>

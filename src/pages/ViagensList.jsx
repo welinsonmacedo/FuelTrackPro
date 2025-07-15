@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Timestamp,
@@ -34,6 +34,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   const { rotas, loading: loadingRotas } = useRotas();
   const { motoristas } = useMotoristas();
   const { veiculos } = useVeiculos();
+
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -41,8 +42,6 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   const [confirmarId, setConfirmarId] = useState(null);
   const [viagemParaVincular, setViagemParaVincular] = useState(null);
   const [viagemChecklist, setViagemChecklist] = useState(null);
-
-  // Objeto com chaves = id da viagem e valor = array de checklists vinculados
   const [checklistsPorViagem, setChecklistsPorViagem] = useState({});
 
   const clean = (str) => (str || "").toString().toLowerCase().trim();
@@ -50,7 +49,6 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   // Filtra viagens pelo termo da busca
   const filtrados = useMemo(() => {
     const buscaLower = busca.toLowerCase();
-
     return viagens.filter((v) => {
       return (
         clean(v.placa).includes(buscaLower) ||
@@ -65,19 +63,41 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: yupResolver(viagensSchema) });
 
-  // Placas e motoristas disponíveis para selects
+  // Observa o campo "placa" para atualizar o veículo selecionado
+  const placaSelecionada = useWatch({ control, name: "placa" });
+  const [veiculoPrincipalSelecionado, setVeiculoPrincipalSelecionado] =
+    useState(null);
 
+  useEffect(() => {
+    if (!placaSelecionada) {
+      setVeiculoPrincipalSelecionado(null);
+      return;
+    }
+    const veiculo = veiculos.find((v) => v.placa === placaSelecionada);
+    setVeiculoPrincipalSelecionado(veiculo || null);
+  }, [placaSelecionada, veiculos]);
+
+  // Placas e motoristas disponíveis para selects
   const placasDisponiveis = [
-    ...new Set(veiculos.map((ab) => ab.placa).filter(Boolean)),
+    ...new Set(
+      veiculos
+        .filter((v) => v.tipo !== "Carreta") // filtra veículos que NÃO são carreta
+        .map((v) => v.placa)
+        .filter(Boolean)
+    ),
   ];
+  const placasCarretas = veiculos
+    .filter((v) => v.tipo === "Carreta")
+    .map((v) => v.placa);
   const motoristasDisponiveis = [
     ...new Set(motoristas.map((m) => m.nome).filter(Boolean)),
   ];
 
-  // Form reset quando abrir/fechar modal
+  // Form reset quando abrir/fechar modal ou editar
   useEffect(() => {
     if (!mostrarForm) {
       reset({});
@@ -200,14 +220,13 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     }
   };
 
-  // === BUSCAR CHECKLISTS FILTRADOS POR viagemId ===
+  // Buscar checklists para as viagens filtradas
   useEffect(() => {
     async function fetchChecklistsPorViagem() {
       const resultados = {};
 
       for (const viagem of filtrados) {
         try {
-          // Buscar checklist onde viagemId == viagem.id
           const q = query(
             collection(db, "checklists"),
             where("viagemId", "==", viagem.id)
@@ -216,7 +235,6 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
           const querySnapshot = await getDocs(q);
           const checklists = querySnapshot.docs.map((doc) => doc.data());
 
-          console.log(`Resultados para ${viagem.id}`, checklists.length);
           resultados[viagem.id] = checklists;
         } catch (error) {
           console.error(
@@ -273,7 +291,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       >
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField
-            label="Placa"
+            label="Placa (Veículo Principal)"
             name="placa"
             as="select"
             register={register}
@@ -286,6 +304,23 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
               </option>
             ))}
           </FormField>
+
+          {veiculoPrincipalSelecionado?.tipo === "Cavalo Mec." && (
+            <FormField
+              label="Carreta"
+              name="carreta"
+              as="select"
+              register={register}
+              error={errors.carreta}
+            >
+              <option value="">Selecione a carreta</option>
+              {placasCarretas.map((placa) => (
+                <option key={placa} value={placa}>
+                  {placa}
+                </option>
+              ))}
+            </FormField>
+          )}
 
           <FormField
             label="Motorista"
@@ -422,7 +457,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
       {confirmarId && (
         <ConfirmDialog
-          isOpen={!!confirmarId} 
+          isOpen={!!confirmarId}
           title="Excluir viagem"
           message="Tem certeza que deseja excluir esta viagem?"
           onConfirm={handleConfirmDelete}
@@ -529,7 +564,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             rota={viagemChecklist.viagem.rota}
             placa={viagemChecklist.viagem.placa}
             motorista={viagemChecklist.viagem.motorista}
-            viagemId={viagemChecklist.viagem.id} // importante passar o id da viagem
+            viagemId={viagemChecklist.viagem.id}
             onClose={() => setViagemChecklist(null)}
           />
         </Modal>

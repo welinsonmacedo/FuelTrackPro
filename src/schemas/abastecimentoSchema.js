@@ -1,20 +1,12 @@
-import * as yup from 'yup';
+import * as yup from "yup";
 
 export const abastecimentoSchema = yup.object().shape({
-  placa: yup.string().required('Selecione a placa'),
-  motorista: yup.string().required('Selecione o motorista'),
-  fornecedor: yup.string().required('Informe o fornecedor'),
-  data: yup.date().required('Informe a data'),
-  km: yup
-    .number()
-    .required('Informe o KM')
-    .min(0, 'KM não pode ser negativo'),
-  litros: yup
-    .number()
-    .required('Informe a quantidade de litros')
-    .min(0.1, 'Litros devem ser maior que zero'),
-  valorLitro: yup
-    .number()
-    .required('Informe o valor do litro')
-    .min(0.01, 'Valor litro deve ser positivo'),
+  placa: yup.string().required("Placa é obrigatória"),
+  motorista: yup.string().required("Motorista é obrigatório"),
+  fornecedor: yup.string().required("Fornecedor é obrigatório"),
+  km: yup.number().required("KM é obrigatório").typeError("KM inválido"),
+  data: yup.date().required("Data é obrigatória"),
+  litros: yup.number().required("Litros são obrigatórios").typeError("Litros inválidos"),
+  valorLitro: yup.number().required("Valor por litro é obrigatório").typeError("Valor inválido"),
+  tipoCombustivel: yup.string().required("Tipo de combustível é obrigatório"),
 });

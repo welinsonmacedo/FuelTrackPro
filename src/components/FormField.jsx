@@ -1,3 +1,5 @@
+import React from "react";
+
 export const FormField = ({
   label,
   name,
@@ -8,6 +10,7 @@ export const FormField = ({
   options,
   listId,
   register,
+  inputStyle,
   ...rest
 }) => {
   const commonStyle = {
@@ -19,6 +22,9 @@ export const FormField = ({
     fontSize: "14px",
     height: "38px",
   };
+
+  // Combina o estilo padrão com o estilo passado via props
+  const combinedStyle = { ...commonStyle, ...inputStyle };
 
   const registered = register ? register(name) : {};
 
@@ -46,7 +52,7 @@ export const FormField = ({
           id={name}
           {...registered}
           {...rest}
-          style={commonStyle}
+          style={combinedStyle}
           list={listId}
         >
           {children ||
@@ -61,7 +67,7 @@ export const FormField = ({
           id={name}
           {...registered}
           {...rest}
-          style={{ ...commonStyle, height: "auto", minHeight: "80px" }}
+          style={{ ...combinedStyle, height: "auto", minHeight: "80px" }}
           list={listId}
         />
       ) : (
@@ -70,7 +76,7 @@ export const FormField = ({
           type={type}
           {...registered}
           {...rest}
-          style={commonStyle}
+          style={combinedStyle}
           list={listId}
         />
       )}
@@ -82,7 +88,10 @@ export const FormField = ({
       {uniqueOptions.length > 0 && listId && (
         <datalist id={listId}>
           {uniqueOptions.map((opt, i) => (
-            <option key={`${name}-datalist-${opt.value}-${i}`} value={opt.value} />
+            <option
+              key={`${name}-datalist-${opt.value}-${i}`}
+              value={opt.value}
+            />
           ))}
         </datalist>
       )}

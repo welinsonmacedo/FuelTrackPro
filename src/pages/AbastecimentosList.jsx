@@ -1,3 +1,4 @@
+// IMPORTS (sem alteração)
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,7 +17,7 @@ import { Form } from "../components/Form";
 import { Modal } from "../components/Modal";
 import { formatData } from "../utils/data";
 
-// Função auxiliar para pegar último km abastecido por veículo
+// 🚛 Último KM abastecido por placa
 const getUltimoKmPorVeiculo = (abastecimentos) =>
   abastecimentos.reduce((acc, cur) => {
     const kmAtual = acc[cur.placa] || 0;
@@ -73,6 +74,7 @@ const AbastecimentosList = () => {
   const watchedPlaca = watch("placa");
   const watchedKm = watch("km");
   const watchedLitros = watch("litros");
+  const watchedTipoCombustivel = watch("tipoCombustivel");
 
   useEffect(() => {
     if (!watchedPlaca || !watchedLitros) return;
@@ -93,6 +95,7 @@ const AbastecimentosList = () => {
     }
   }, [watchedPlaca, watchedLitros, setError, clearErrors, veiculos]);
 
+  // 🚫 Valida KM
   useEffect(() => {
     if (!watchedPlaca || !watchedKm) return;
 
@@ -112,14 +115,24 @@ const AbastecimentosList = () => {
     } else {
       clearErrors("km");
     }
-  }, [
-    watchedPlaca,
-    watchedKm,
-    setError,
-    clearErrors,
-    ultimoKmPorVeiculo,
-    editando,
-  ]);
+  }, [watchedPlaca, watchedKm, setError, clearErrors, ultimoKmPorVeiculo, editando]);
+
+  // ⚠️ Valida tipo de combustível compatível com o veículo
+  useEffect(() => {
+    if (!watchedPlaca || !watchedTipoCombustivel) return;
+
+    const veiculo = veiculos.find((v) => v.placa === watchedPlaca);
+    if (!veiculo || !veiculo.tipoCombustivel) return;
+
+    if (veiculo.tipoCombustivel !== watchedTipoCombustivel) {
+      setError("tipoCombustivel", {
+        type: "manual",
+        message: `Esse veículo utiliza ${veiculo.tipoCombustivel}.`,
+      });
+    } else {
+      clearErrors("tipoCombustivel");
+    }
+  }, [watchedPlaca, watchedTipoCombustivel, veiculos, setError, clearErrors]);
 
   useEffect(() => {
     if (!mostrarForm) {
@@ -129,6 +142,7 @@ const AbastecimentosList = () => {
       reset({
         ...editando,
         data: editando.data ? formatData(editando.data) : "",
+        tipoCombustivel: editando.tipoCombustivel || "",
       });
     } else {
       reset({});
@@ -149,24 +163,10 @@ const AbastecimentosList = () => {
     if (editando) {
       const dadosAntes = editando;
       await editarAbastecimento(editando.id, dadosFormatados);
-      await log(
-        "auditoriaAbastecimentos",
-        "Editar abastecimento",
-        "Atualizou dados do abastecimento",
-        dadosAntes,
-        dadosFormatados,
-        "AbastecimentosList"
-      );
+      await log("auditoriaAbastecimentos", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
     } else {
       await adicionarAbastecimento(dadosFormatados);
-      await log(
-        "auditoriaAbastecimentos",
-        "Criar abastecimento",
-        "Cadastro de novo abastecimento",
-        null,
-        dadosFormatados,
-        "AbastecimentosList"
-      );
+      await log("auditoriaAbastecimentos", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
     }
     fecharModal();
   };
@@ -180,59 +180,21 @@ const AbastecimentosList = () => {
   const handleConfirmDelete = async () => {
     const dadosAntes = abastecimentos.find((a) => a.id === confirmarId);
     await excluirAbastecimento(confirmarId);
-    await log(
-      "auditoriaAbastecimentos",
-      "Excluir abastecimento",
-      "Removeu abastecimento",
-      dadosAntes,
-      null,
-      "AbastecimentosList"
-    );
+    await log("auditoriaAbastecimentos", "Excluir abastecimento", "Removeu abastecimento", dadosAntes, null, "AbastecimentosList");
     setConfirmarId(null);
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "900px",
-        margin: "20px auto",
-        padding: "20px 15px",
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-        boxSizing: "border-box",
-      }}
-    >
+    <div style={{ maxWidth: "900px", margin: "20px auto", padding: "20px 15px", backgroundColor: "#fff", borderRadius: "8px", boxSizing: "border-box" }}>
       <h2 style={{ marginBottom: "20px" }}>Abastecimentos</h2>
 
-      <button
-        onClick={abrirCadastro}
-        style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#4df55b",
-          color: "#1e1f3b",
-          fontWeight:"900",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box",
-        }}
-      >
+      <button onClick={abrirCadastro} style={{ marginBottom: "20px", padding: "12px 20px", fontSize: "16px", cursor: "pointer", borderRadius: "6px", border: "none", backgroundColor: "#4df55b", color: "#1e1f3b", fontWeight: "900", width: "100%", maxWidth: "400px", boxSizing: "border-box" }}>
         Lançar Abastecimento
       </button>
 
       <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Abastecimento`}>
         <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormField
-            label="Placa"
-            name="placa"
-            as="select"
-            register={register}
-            error={errors.placa}
-          >
+          <FormField label="Placa" name="placa" as="select" register={register} error={errors.placa}>
             <option value="">Selecione a placa</option>
             {veiculos.map((v) => (
               <option key={v.id} value={v.placa}>
@@ -241,13 +203,7 @@ const AbastecimentosList = () => {
             ))}
           </FormField>
 
-          <FormField
-            label="Motorista"
-            name="motorista"
-            as="select"
-            register={register}
-            error={errors.motorista}
-          >
+          <FormField label="Motorista" name="motorista" as="select" register={register} error={errors.motorista}>
             <option value="">Selecione o motorista</option>
             {motoristas.map((m) => (
               <option key={m.id} value={m.nome}>
@@ -256,13 +212,7 @@ const AbastecimentosList = () => {
             ))}
           </FormField>
 
-          <FormField
-            label="Fornecedor"
-            name="fornecedor"
-            as="select"
-            register={register}
-            error={errors.fornecedor}
-          >
+          <FormField label="Fornecedor" name="fornecedor" as="select" register={register} error={errors.fornecedor}>
             <option value="">Selecione o fornecedor</option>
             {fornecedores.map((f) => (
               <option key={f.id} value={f.nome}>
@@ -271,69 +221,33 @@ const AbastecimentosList = () => {
             ))}
           </FormField>
 
-          <FormField
-            label="KM"
-            name="km"
-            type="number"
-            register={register}
-            error={errors.km}
-          />
+          <FormField label="Tipo de Combustível" name="tipoCombustivel" as="select" register={register} error={errors.tipoCombustivel}>
+            <option value="">Selecione o tipo</option>
+            <option value="Diesel S10">Diesel S10</option>
+            <option value="Diesel Comum">Diesel Comum</option>
+            <option value="Gasolina">Gasolina</option>
+            <option value="Etanol">Etanol</option>
+          </FormField>
 
-          <FormField
-            label="Data"
-            name="data"
-            type="date"
-            register={register}
-            error={errors.data}
-          />
-
-          <FormField
-            label="Litros"
-            name="litros"
-            type="number"
-            step="0.01"
-            register={register}
-            error={errors.litros}
-          />
-
-          <FormField
-            label="Valor do Litro"
-            name="valorLitro"
-            type="number"
-            step="0.01"
-            register={register}
-            error={errors.valorLitro}
-          />
+          <FormField label="KM" name="km" type="number" register={register} error={errors.km} />
+          <FormField label="Data" name="data" type="date" register={register} error={errors.data} />
+          <FormField label="Litros" name="litros" type="number" step="0.01" register={register} error={errors.litros} />
+          <FormField label="Valor do Litro" name="valorLitro" type="number" step="0.01" register={register} error={errors.valorLitro} />
 
           <div style={{ width: "100%" }}>
-            <SubmitButton loading={isSubmitting}>
-              {editando ? "Atualizar" : "Cadastrar"}
-            </SubmitButton>
+            <SubmitButton loading={isSubmitting}>{editando ? "Atualizar" : "Cadastrar"}</SubmitButton>
           </div>
         </Form>
       </Modal>
 
-      <SearchInput
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar abastecimentos..."
-        style={{
-          marginBottom: "20px",
-          padding: "8px",
-          width: "100%",
-          maxWidth: "400px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          boxSizing: "border-box",
-        }}
-      />
+      <SearchInput value={busca} onChange={setBusca} placeholder="Buscar abastecimentos..." style={{ marginBottom: "20px", padding: "8px", width: "100%", maxWidth: "400px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} />
 
       <div style={{ width: "100%", maxWidth: "900px" }}>
         {filtrados.map((a) => (
           <ListItem
             key={a.id}
             title={`${a.placa} - ${a.motorista || "-"}`}
-            subtitle={`KM: ${a.km} |  Data: ${formatData(a.data)} | Litros: ${a.litros} | Valor litro: R$ ${a.valorLitro.toFixed(2)} | Total:R$ ${a.valorLitro*a.litros}`}
+            subtitle={`KM: ${a.km} | Data: ${formatData(a.data)} | Litros: ${a.litros} | Tipo: ${a.tipoCombustivel || "-"} | Valor litro: R$ ${a.valorLitro.toFixed(2)} | Total: R$ ${(a.valorLitro * a.litros).toFixed(2)}`}
             onEdit={() => handleEdit(a)}
             onDelete={() => setConfirmarId(a.id)}
             style={{ marginBottom: "12px" }}
