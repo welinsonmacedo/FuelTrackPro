@@ -37,6 +37,9 @@ import FinanceiroPage from "./pages/FinanceiroPage";
 import RelatoriosFinanceirosPage from "./pages/RelatoriosFinanceirosPage";
 import FinanceiroPageCadastro from "./pages/FinanceiroPageCadastro";
 import { NotasPage } from "./pages/NotasPage";
+import VariaPrecoPage from "./pages/VariaPrecoPage";
+import CNHAlertList from "./pages/CNHAlertList";
+import PneusVeiculo from "./pages/PneusVeiculo";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -108,6 +111,9 @@ function AppWrapper() {
         <Route path="relatorio-financeiro" element={<RelatoriosFinanceirosPage/>} />
         <Route path="financeiro-cadastro" element={<FinanceiroPageCadastro/>} />
         <Route path="financeiro-notas-os" element={<NotasPage/>} />
+        <Route path="varia-preco" element={<VariaPrecoPage/>} />
+        <Route path="cnh-alerta" element={<CNHAlertList/>} />
+        <Route path="pneus-controle" element={<PneusVeiculo/>} />
       </Route>
 
 

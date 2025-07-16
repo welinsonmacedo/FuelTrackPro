@@ -16,6 +16,8 @@ import { Modal } from "../components/Modal";
 import { FormField } from "../components/FormField";
 import { SubmitButton } from "../components/SubmitButton";
 import { OsModal } from "../components/OsModal";
+import { SearchInput } from "../components/SearchInput";
+import Button from "../components/Button";
 
 export default function ChecklistPage() {
   const [checklists, setChecklists] = useState([]);
@@ -33,7 +35,9 @@ export default function ChecklistPage() {
     horario: "",
     defeitosSelecionados: [],
   });
-
+  useEffect(() => {
+    carregarChecklists();
+  }, [filtroPlaca, filtroMotorista]);
   const carregarFornecedores = async () => {
     try {
       const q = query(collection(db, "fornecedores"));
@@ -188,28 +192,33 @@ export default function ChecklistPage() {
             padding: 20px 30px;
             border-radius: 8px;
             box-shadow: 0 0 12px rgba(0,0,0,0.1);
-            max-width: 600px;
+            max-width:700px;
             margin: 0 auto;
           }
           p {
             font-size: 16px;
-            line-height: 1.5;
             margin: 6px 0;
           }
           strong {
             color: #27ae60;
-            width: 140px;
+            width: 240px;
             display: inline-block;
           }
-          ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin-top: 0;
-          }
-          li {
-            margin-bottom: 8px;
-            font-size: 15px;
-          }
+         ul {
+  list-style-type: disc;
+  padding-left: 0;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 40px;
+}
+
+li {
+  width: calc(50% - 20px);
+  margin-bottom: 8px;
+  font-size: 15px;
+  list-style:none;
+}
           em {
             color: #555;
             font-style: italic;
@@ -230,7 +239,7 @@ export default function ChecklistPage() {
 
           <p><strong>Placa:</strong> ${checklist.placa || "N/A"}</p>
           <p><strong>Motorista:</strong> ${checklist.motorista || "N/A"}</p>
-          <p><strong>Tipo:</strong> ${checklist.tipo || "N/A"}</p>
+          <p><strong>Tipo Inicial ou Final:</strong> ${checklist.tipo || "N/A"}</p>
           <p><strong>Data:</strong> ${formatData(checklist.dataRegistro)}</p>
           <hr/>
           <h3>Respostas:</h3>
@@ -272,7 +281,7 @@ export default function ChecklistPage() {
     const itensUsados = os.itensUsados || [];
     const totalGeral = (os.totalGeral ?? 0).toFixed(2);
     const desconto = (os.desconto ?? 0).toFixed(2);
-  const janela = window.open("", "_blank");
+    const janela = window.open("", "_blank");
     const html = `
   <html>
     <head>
@@ -405,12 +414,10 @@ export default function ChecklistPage() {
   </html>
 `;
 
-  
     janela.document.write(html);
-  janela.document.close();
-  janela.focus(); // opcional, para garantir foco
-  janela.print(); // chama a impressão automaticamente
-    
+    janela.document.close();
+    janela.focus(); // opcional, para garantir foco
+    janela.print(); // chama a impressão automaticamente
   };
 
   const checklistAtual = checklists.find((ch) => ch.id === osChecklistId);
@@ -430,23 +437,23 @@ export default function ChecklistPage() {
     transition: "background-color 0.3s",
   });
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: 4 }}>
       <h1>Checklists</h1>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <input
+        <SearchInput
           type="text"
           placeholder="Filtrar por placa"
           value={filtroPlaca}
           onChange={(e) => setFiltroPlaca(e.target.value)}
         />
-        <input
+        <SearchInput
           type="text"
           placeholder="Filtrar por motorista"
           value={filtroMotorista}
           onChange={(e) => setFiltroMotorista(e.target.value)}
         />
-        <button onClick={carregarChecklists}>Aplicar Filtros</button>
+     
       </div>
 
       {loading ? (
@@ -488,73 +495,89 @@ export default function ChecklistPage() {
               </tr>
             </thead>
             <tbody>
-              {checklists.map((ch, index) => (
-                <tr
-                  key={ch.id}
-                  style={{
-                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  <td style={{ padding: "12px 16px" }}>{ch.placa}</td>
-                  <td style={{ padding: "12px 16px" }}>{ch.motorista}</td>
-                  <td style={{ padding: "12px 16px" }}>{ch.tipo}</td>
-                  <td style={{ padding: "12px 16px" }}>
-                    {formatData(ch.dataRegistro)}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    {ch.osCriada ? "Sim" : "Não"}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>{ch.statusOS || "-"}</td>
-                  <td
+              {checklists.map((ch, index) => {
+                const possuiDefeitos = Object.values(ch.respostas || {}).some(
+                  (resp) => resp.status === "defeito"
+                );
+
+                const corDeFundo = possuiDefeitos
+                  ? index % 2 === 0
+                    ? "#ffffff"
+                    : "#fffd81"
+                  : "#d4edda"; // Verde claro se não houver defeitos
+
+                return (
+                  <tr
+                    key={ch.id}
                     style={{
-                      padding: "12px 16px",
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 8,
+                      backgroundColor: corDeFundo,
+                      borderBottom: "1px solid #ddd",
                     }}
                   >
-                    {!ch.osCriada && (
-                      <button
-                        onClick={() => abrirModalOS(ch)}
-                        style={buttonStyle("#3498db")}
-                      >
-                        Criar OS
-                      </button>
-                    )}
-                    <button
-                      onClick={() => imprimirChecklist(ch)}
-                      style={buttonStyle("#2ecc71")}
+                    <td style={{ padding: "12px 16px" }}>{ch.placa}</td>
+                    <td style={{ padding: "12px 16px" }}>{ch.motorista}</td>
+                    <td style={{ padding: "12px 16px" }}>{ch.tipo}</td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {formatData(ch.dataRegistro)}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {ch.osCriada ? "Sim" : "Não"}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {ch.statusOS || "-"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "12px 16px",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                      }}
                     >
-                      Imprimir
-                    </button>
-                    {ch.osCriada && (
-                      <>
+                      <button
+                        onClick={() => imprimirChecklist(ch)}
+                        style={buttonStyle("#2ecc71")}
+                      >
+                        Imprimir
+                      </button>
+
+                      {possuiDefeitos && !ch.osCriada && (
                         <button
                           onClick={() => abrirModalOS(ch)}
-                          style={buttonStyle("#f39c12")}
+                          style={buttonStyle("#3498db")}
                         >
-                          Editar OS
+                          Criar OS
                         </button>
-                        <button
-                          onClick={() => imprimirOS(ch)}
-                          style={buttonStyle("#9b59b6")}
-                        >
-                          Imprimir OS
-                        </button>
-                        {ch.statusOS !== "concluida" && (
+                      )}
+
+                      {possuiDefeitos && ch.osCriada && (
+                        <>
                           <button
-                            onClick={() => darBaixaOS(ch.id)}
-                            style={buttonStyle("#e74c3c")}
+                            onClick={() => abrirModalOS(ch)}
+                            style={buttonStyle("#f39c12")}
                           >
-                            Dar Baixa
+                            Editar OS
                           </button>
-                        )}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                          <button
+                            onClick={() => imprimirOS(ch)}
+                            style={buttonStyle("#9b59b6")}
+                          >
+                            Imprimir OS
+                          </button>
+                          {ch.statusOS !== "concluida" && (
+                            <button
+                              onClick={() => darBaixaOS(ch.id)}
+                              style={buttonStyle("#e74c3c")}
+                            >
+                              Dar Baixa
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

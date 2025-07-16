@@ -255,14 +255,15 @@ const AbastecimentosList = () => {
         ))}
       </div>
 
-      {confirmarId !== null && (
-        <ConfirmDialog
-          title="Excluir abastecimento"
-          message="Tem certeza que deseja excluir este abastecimento?"
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setConfirmarId(null)}
-        />
-      )}
+   {confirmarId !== null && (
+ <ConfirmDialog
+  isOpen={confirmarId !== null}
+  title="Excluir abastecimento"
+  message="Tem certeza que deseja excluir este abastecimento?"
+  onConfirm={handleConfirmDelete}
+  onCancel={() => setConfirmarId(null)}
+/>
+)}
     </div>
   );
 };

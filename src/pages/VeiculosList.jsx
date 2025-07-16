@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { veiculoSchema } from "../schemas/veiculoSchema";
 import { useVeiculos } from "../hooks/useVeiculos";
 import { useAuditoria } from "../hooks/useAuditoria";
+import { useModelosVeiculos } from "../hooks/useModelosVeiculos"; // Importa o hook
 import { SearchInput } from "../components/SearchInput";
 import { FormField } from "../components/FormField";
 import { ListItem } from "../components/ListItem";
@@ -11,10 +12,11 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SubmitButton } from "../components/SubmitButton";
 import { Form } from "../components/Form";
 import { Modal } from "../components/Modal";
+import CadastroModeloVeiculo from "../components/CadastroModeloVeiculo";
 
 const VeiculosList = () => {
-  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } =
-    useVeiculos();
+  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } = useVeiculos();
+  const { modelos } = useModelosVeiculos(); // Pega modelos do hook
   const { log } = useAuditoria();
 
   const [busca, setBusca] = useState("");
@@ -24,6 +26,8 @@ const VeiculosList = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmarId, setConfirmarId] = useState(null);
   const [submitError, setSubmitError] = useState(null);
+
+  const [mostrarModalModelo, setMostrarModalModelo] = useState(false);
 
   const filtrados = veiculos.filter(
     (v) =>
@@ -75,6 +79,14 @@ const VeiculosList = () => {
 
   const fecharModal = () => {
     setMostrarForm(false);
+  };
+
+  const abrirCadastroModelo = () => {
+    setMostrarModalModelo(true);
+  };
+
+  const fecharCadastroModelo = () => {
+    setMostrarModalModelo(false);
   };
 
   const prepararDadosParaEnvio = (dados) => {
@@ -169,59 +181,94 @@ const VeiculosList = () => {
         borderRadius: "8px",
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Veículos</h2>
-
-      <button
-        onClick={abrirCadastro}
+      <div
         style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#3498db",
-          color: "#fff",
-          width: "100%",
-          maxWidth: "400px",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
         }}
       >
-        Cadastrar Veículo
-      </button>
+        <h2 style={{ marginBottom: "20px" }}>Veículos</h2>
 
-      <Modal
-        isOpen={mostrarForm}
-        onClose={fecharModal}
-        title={`${tituloForm} Veículo`}
-      >
-        <Form
-          onSubmit={handleSubmit(onSubmit)}
-          style={{ padding: 0, border: "none" }}
+        <button
+          onClick={abrirCadastro}
+          style={{
+            marginBottom: "10px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: "#3498db",
+            color: "#fff",
+            width: "100%",
+            maxWidth: "400px",
+          }}
         >
+          Cadastrar Veículo
+        </button>
+
+        <button
+          onClick={abrirCadastroModelo}
+          style={{
+            marginBottom: "20px",
+            marginLeft: "20px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: "#28a745",
+            color: "#fff",
+            width: "100%",
+            maxWidth: "400px",
+          }}
+        >
+          Cadastrar Modelo de Veículo
+        </button>
+        <SearchInput
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar veículos..."
+          style={{
+            marginBottom: "20px",
+            padding: "8px",
+            width: "100%",
+            maxWidth: "400px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+          }}
+        />
+      </div>
+      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Veículo`}>
+        <Form onSubmit={handleSubmit(onSubmit)} style={{ padding: 0, border: "none" }}>
           {submitError && (
             <div style={{ color: "red", marginBottom: "15px" }}>
               {submitError}
             </div>
           )}
 
-          <FormField
-            label="Placa"
-            name="placa"
-            register={register}
-            error={errors.placa}
-          />
-          <FormField
-            label="Marca"
-            name="marca"
-            register={register}
-            error={errors.marca}
-          />
+          <FormField label="Placa" name="placa" register={register} error={errors.placa} />
+          <FormField label="Marca" name="marca" register={register} error={errors.marca} />
+
+          {/* Alteração aqui: campo Modelo como select */}
           <FormField
             label="Modelo"
             name="modelo"
+            as="select"
             register={register}
             error={errors.modelo}
-          />
+          >
+            <option value="">Selecione o modelo</option>
+            {modelos.map((modelo) => (
+              <option key={modelo.id} value={modelo.modelo}>
+                {modelo.modelo}
+              </option>
+            ))}
+          </FormField>
+
           <FormField
             label="Ano"
             name="ano"
@@ -243,30 +290,10 @@ const VeiculosList = () => {
             <option value="Popular">Popular</option>
             <option value="3/4">3/4</option>
           </FormField>
-          <FormField
-            label="Chassi"
-            name="chassi"
-            register={register}
-            error={errors.chassi}
-          />
-          <FormField
-            label="Renavam"
-            name="renavam"
-            register={register}
-            error={errors.renavam}
-          />
-          <FormField
-            label="Cor"
-            name="cor"
-            register={register}
-            error={errors.cor}
-          />
-          <FormField
-            label="Filial"
-            name="filial"
-            register={register}
-            error={errors.filial}
-          />
+          <FormField label="Chassi" name="chassi" register={register} error={errors.chassi} />
+          <FormField label="Renavam" name="renavam" register={register} error={errors.renavam} />
+          <FormField label="Cor" name="cor" register={register} error={errors.cor} />
+          <FormField label="Filial" name="filial" register={register} error={errors.filial} />
 
           {tipo && tipo !== "Carreta" && (
             <>
@@ -303,37 +330,22 @@ const VeiculosList = () => {
             />
           )}
 
-          <SubmitButton
-            loading={isSubmitting}
-            disabled={!isValid || isSubmitting}
-          >
+          <SubmitButton loading={isSubmitting} disabled={!isValid || isSubmitting}>
             {editando ? "Atualizar" : "Cadastrar"}
           </SubmitButton>
         </Form>
       </Modal>
 
-      <SearchInput
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar veículos..."
-        style={{
-          marginBottom: "20px",
-          padding: "8px",
-          width: "100%",
-          maxWidth: "400px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-        }}
-      />
+      <Modal isOpen={mostrarModalModelo} onClose={fecharCadastroModelo} title="Cadastrar Modelo de Veículo">
+        <CadastroModeloVeiculo onSalvo={fecharCadastroModelo} />
+      </Modal>
 
       <div style={{ width: "100%", maxWidth: "900px" }}>
         {filtrados.map((v) => (
           <ListItem
             key={v.id}
             title={`${v.placa} - ${v.modelo || ""}`}
-            subtitle={`Tipo: ${v.tipo || "-"} | Combustível: ${
-              v.tipoCombustivel || "-"
-            }`}
+            subtitle={`Tipo: ${v.tipo || "-"} | Combustível: ${v.tipoCombustivel || "-"}`}
             onEdit={() => handleEdit(v)}
             onDelete={() => setConfirmarId(v.id)}
             isDeleting={deleting && confirmarId === v.id}
@@ -344,7 +356,7 @@ const VeiculosList = () => {
 
       {confirmarId !== null && (
         <ConfirmDialog
-          isOpen={confirmarId !== null} // aqui já tá certo
+          isOpen={confirmarId !== null}
           title="Excluir veículo"
           message="Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita."
           onConfirm={handleConfirmDelete}

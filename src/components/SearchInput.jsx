@@ -3,7 +3,7 @@ export const SearchInput = ({ value, onChange, ...props }) => {
     <input
       type="text"
       value={value}
-      onChange={onChange}             // <—— aqui
+      onChange={(e) => onChange(e.target.value)} // ⬅️ Corrigido aqui!
       {...props}
       style={{
         margin: "20px",

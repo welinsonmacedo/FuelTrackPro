@@ -167,7 +167,11 @@ export default function Layout() {
         { to: "/abastecimentos", label: "Abastecimentos" },
         { to: "/manutencoes", label: "Manutenções" },
         { to: "/check-list", label: " Check-List" },
+        { to: "/pneus-controle", label: " Pneus" },
          { to: "/notificacoes", label: "Notificações" },
+         { to: "/cnh-alerta", label: "Notificações CNH" },
+
+         
       ],
     },
     {
@@ -210,6 +214,7 @@ export default function Layout() {
         { to: "/relatorio-financeiro", label: "Relatorio" },
       { to: "/financeiro-cadastro", label: "Cadastro" },
       { to: "/financeiro-notas-os", label: "Notas/Os" },
+       { to: "/varia-preco", label: "Meu Combustivel" },
       ],
     },
 
