@@ -40,6 +40,7 @@ import { NotasPage } from "./pages/NotasPage";
 import VariaPrecoPage from "./pages/VariaPrecoPage";
 import CNHAlertList from "./pages/CNHAlertList";
 import PneusVeiculo from "./pages/PneusVeiculo";
+import KmAtualPage from "./pages/KmAtualPage";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -114,6 +115,7 @@ function AppWrapper() {
         <Route path="varia-preco" element={<VariaPrecoPage/>} />
         <Route path="cnh-alerta" element={<CNHAlertList/>} />
         <Route path="pneus-controle" element={<PneusVeiculo/>} />
+         <Route path="odometro" element={<KmAtualPage/>} />
       </Route>
 
 

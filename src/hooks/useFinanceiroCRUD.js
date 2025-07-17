@@ -10,7 +10,9 @@ import {
 } from "firebase/firestore";
 
 export const useFinanceiroCRUD = () => {
-  const [loading, setLoading] = useState(false);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [error, setError] = useState(null);
 
   const removeUndefinedFields = (obj) => {
@@ -20,15 +22,17 @@ export const useFinanceiroCRUD = () => {
     }, {});
   };
 
+  const normalizeItem = (item) => ({
+    ...item,
+    valorUnitario: parseFloat(item.valorUnitario) || 0,
+    quantidade: parseFloat(item.quantidade) || 0,
+    desconto: parseFloat(item.desconto) || 0,
+    valorTotal: parseFloat(item.valorTotal) || 0,
+  });
+
   const normalizeDespesa = (data) => {
     const itensNormalizados = Array.isArray(data.itens)
-      ? data.itens.map((item) => ({
-          ...item,
-          valorUnitario: parseFloat(item.valorUnitario) || 0,
-          quantidade: parseFloat(item.quantidade) || 0,
-          desconto: parseFloat(item.desconto) || 0,
-          valorTotal: parseFloat(item.valorTotal) || 0,
-        }))
+      ? data.itens.map(normalizeItem)
       : [];
 
     return {
@@ -41,11 +45,12 @@ export const useFinanceiroCRUD = () => {
   const convertToTimestamp = (value) => {
     if (!value) return null;
     if (value instanceof Date) return Timestamp.fromDate(value);
-    return value;
+    if (value.seconds) return value;
+    return null;
   };
 
   const createDespesa = async (data) => {
-    setLoading(true);
+    setLoadingCreate(true);
     setError(null);
     try {
       const dataNormalizada = normalizeDespesa(data);
@@ -56,15 +61,15 @@ export const useFinanceiroCRUD = () => {
       };
       await addDoc(collection(db, "financeiro"), dataTratada);
     } catch (e) {
-      setError(e);
+      setError(e.message || "Erro ao criar despesa");
       console.error("Erro ao criar despesa:", e);
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
   const updateDespesa = async (id, data) => {
-    setLoading(true);
+    setLoadingUpdate(true);
     setError(null);
     try {
       const dataNormalizada = normalizeDespesa(data);
@@ -76,32 +81,34 @@ export const useFinanceiroCRUD = () => {
       const ref = doc(db, "financeiro", id);
       await updateDoc(ref, dataTratada);
     } catch (e) {
-      setError(e);
+      setError(e.message || "Erro ao atualizar despesa");
       console.error("Erro ao atualizar despesa:", e);
     } finally {
-      setLoading(false);
+      setLoadingUpdate(false);
     }
   };
 
   const deleteDespesa = async (id) => {
-    setLoading(true);
+    setLoadingDelete(true);
     setError(null);
     try {
       const ref = doc(db, "financeiro", id);
       await deleteDoc(ref);
     } catch (e) {
-      setError(e);
+      setError(e.message || "Erro ao excluir despesa");
       console.error("Erro ao excluir despesa:", e);
     } finally {
-      setLoading(false);
+      setLoadingDelete(false);
     }
   };
 
   return {
-    loading,
     error,
     createDespesa,
     updateDespesa,
     deleteDespesa,
+    loadingCreate,
+    loadingUpdate,
+    loadingDelete,
   };
 };

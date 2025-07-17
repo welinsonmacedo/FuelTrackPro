@@ -424,8 +424,18 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
                   label: "Vincular",
                   onClick: () => setViagemParaVincular(v),
                   style: {
-                    backgroundColor: "#28a745",
-                    border: "1px solid #28a745",
+                    backgroundColor: abastecimentos.some(
+                      (ab) => ab.viagemId === v.id
+                    )
+                      ? "#aaa"
+                      : "#28a745",
+                    border:
+                      "1px solid " +
+                      (abastecimentos.some((ab) => ab.viagemId === v.id)
+                        ? "#999"
+                        : "#28a745"),
+                    color: "#fff",
+                    cursor: "pointer",
                   },
                 },
                 {

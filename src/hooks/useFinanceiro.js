@@ -67,7 +67,13 @@ export const useFinanceiro = (filtros) => {
         };
 
         // Aplica a lógica de placa em todas as despesas
-        const listaComPlaca = await Promise.all(docs.map(resolvePlaca));
+       const listaComPlaca = await Promise.all(
+  docs.map(async (d) => {
+    const resolved = await resolvePlaca(d);
+    return { ...resolved, id: d.id }; // <- garante que o ID não se perca
+  })
+);
+setDespesas(listaComPlaca);
         setDespesas(listaComPlaca);
       } catch (error) {
         console.error("Erro ao buscar despesas:", error);

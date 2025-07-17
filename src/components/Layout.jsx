@@ -181,6 +181,7 @@ export default function Layout() {
        { to: "/veiculos-consulta", label: "Veiculos" },
         { to: "/fornecedores-consulta", label: "Fornecedores" },
         { to: "/motoristas-consulta", label: "Motoristas" },
+        { to: "/odometro", label: "KM Atual" },
       ],
     },
     {
