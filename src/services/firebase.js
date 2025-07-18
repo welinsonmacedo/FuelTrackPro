@@ -8,7 +8,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyCHRvBAY3PvN9P_QQJA6XUEEAEwVUWQogE",
     authDomain: "fueltrackpro-a4856.firebaseapp.com",
     projectId: "fueltrackpro-a4856",
-    storageBucket: "fueltrackpro-a4856.firebasestorage.app",
+    storageBucket: "fueltrackpro-a4856.appspot.com",
     messagingSenderId: "22618337014",
     appId: "1:22618337014:web:42234d4ea94d44a7b186d7",
     measurementId: "G-91ESV42JR3"
@@ -22,4 +22,4 @@ const storage = getStorage(app);
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
 
-export { auth, db ,storage,secondaryAuth};
+export { auth, db ,storage,secondaryAuth,app};

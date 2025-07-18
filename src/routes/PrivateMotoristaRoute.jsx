@@ -9,7 +9,7 @@ const PrivateMotoristaRoute = () => {
 
   if (!usuario) return <Navigate to="/login" replace />;
 
-  if (tipoUsuario !== "motorista")
+  if (tipoUsuario !== "Motorista")
     return <p>Você não tem permissão para acessar essa área.</p>;
 
   return <Outlet />;

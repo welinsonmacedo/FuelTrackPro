@@ -41,6 +41,7 @@ import VariaPrecoPage from "./pages/VariaPrecoPage";
 import CNHAlertList from "./pages/CNHAlertList";
 import PneusVeiculo from "./pages/PneusVeiculo";
 import KmAtualPage from "./pages/KmAtualPage";
+import CadastroUsuarioPage from "./pages/CadastroUsuarioPage";
 
 function AppWrapper() {
   // Para usar hooks como useNavigate e useEffect, componente wrapper dentro do BrowserRouter
@@ -71,7 +72,7 @@ function AppWrapper() {
       <Route
         path="/motorista/*"
         element={
-          <PrivateRoute allowedRoles={["motorista"]}>
+          <PrivateRoute allowedRoles={["Motorista"]}>
             <MotoristaArea />
           </PrivateRoute>
         }
@@ -116,6 +117,7 @@ function AppWrapper() {
         <Route path="cnh-alerta" element={<CNHAlertList/>} />
         <Route path="pneus-controle" element={<PneusVeiculo/>} />
          <Route path="odometro" element={<KmAtualPage/>} />
+         
       </Route>
 
 
@@ -126,6 +128,7 @@ function AppWrapper() {
           <Route path="configuracoes" element={<ConfiguracoesPage />} />
           <Route path="licenca" element={<Licenca />} />
           <Route path="logs" element={<Logs />} />
+          <Route path="cadastro-usuarios" element={<CadastroUsuarioPage/>} />
         </Route>
       </Route>
     </Routes>

@@ -28,8 +28,7 @@ import { SearchInput } from "../components/SearchInput";
 import ChecklistViagem from "./ChecklistViagem";
 
 const ViagensList = ({ mostrarCadastrar = true }) => {
-  const { viagens, adicionarViagem, editarViagem, excluirViagem } =
-    useViagens();
+  const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
   const { motoristas } = useMotoristas();
@@ -46,17 +45,39 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
   const clean = (str) => (str || "").toString().toLowerCase().trim();
 
-  // Filtra viagens pelo termo da busca
+  // motoristas para select com id e nome
+  const motoristasDisponiveis = motoristas
+    .filter((m) => m.id && m.nome)
+    .map((m) => ({ id: m.id, nome: m.nome }));
+
+  // Placas e motoristas disponíveis para selects
+  const placasDisponiveis = [
+    ...new Set(
+      veiculos
+        .filter((v) => v.tipo !== "Carreta") // filtra veículos que NÃO são carreta
+        .map((v) => v.placa )
+        .filter(Boolean)
+    ),
+  ];
+  const placasCarretas = veiculos
+    .filter((v) => v.tipo === "Carreta")
+    .map((v) => v.placa);
+
+  // Filtra viagens pelo termo da busca, incluindo nome do motorista
   const filtrados = useMemo(() => {
     const buscaLower = busca.toLowerCase();
     return viagens.filter((v) => {
+      // buscar nome do motorista pelo id salvo na viagem
+      const motoristaObj = motoristas.find((m) => m.id === v.motoristaId);
+      const nomeMotorista = motoristaObj ? motoristaObj.nome : v.motoristaNome || "";
+
       return (
         clean(v.placa).includes(buscaLower) ||
-        clean(v.motorista).includes(buscaLower) ||
+        clean(nomeMotorista).includes(buscaLower) ||
         clean(v.rota).includes(buscaLower)
       );
     });
-  }, [viagens, busca]);
+  }, [viagens, busca, motoristas]);
 
   // Hook form setup
   const {
@@ -81,22 +102,6 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     setVeiculoPrincipalSelecionado(veiculo || null);
   }, [placaSelecionada, veiculos]);
 
-  // Placas e motoristas disponíveis para selects
-  const placasDisponiveis = [
-    ...new Set(
-      veiculos
-        .filter((v) => v.tipo !== "Carreta") // filtra veículos que NÃO são carreta
-        .map((v) => v.placa)
-        .filter(Boolean)
-    ),
-  ];
-  const placasCarretas = veiculos
-    .filter((v) => v.tipo === "Carreta")
-    .map((v) => v.placa);
-  const motoristasDisponiveis = [
-    ...new Set(motoristas.map((m) => m.nome).filter(Boolean)),
-  ];
-
   // Form reset quando abrir/fechar modal ou editar
   useEffect(() => {
     if (!mostrarForm) {
@@ -112,6 +117,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
           ? editando.dataFim.toDate().toISOString().substr(0, 10)
           : "",
         rota: editando.rota || "",
+        motorista: editando.motoristaId || "", // passa o id para o select
+        carreta: editando.carreta || "",
+        km: editando.km || "",
       });
     } else {
       reset({});
@@ -129,11 +137,27 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
   const onSubmit = async (dados) => {
     try {
+      // pegar nome do motorista pelo id selecionado
+      const motoristaSelecionado = motoristasDisponiveis.find(
+        (m) => m.id === dados.motorista
+      );
+
+      if (!motoristaSelecionado) {
+        alert("Motorista inválido!");
+        return;
+      }
+
       const dadosFormatados = {
         ...dados,
+        motoristaId: dados.motorista, // salva o id
+        motoristaNome: motoristaSelecionado.nome,
+        motorista:  motoristaSelecionado.nome,
         dataInicio: Timestamp.fromDate(new Date(dados.dataInicio)),
         dataFim: Timestamp.fromDate(new Date(dados.dataFim)),
       };
+
+      // Remove o campo antigo 'motorista' para evitar conflito, já que usamos motoristaId e motoristaNome
+      delete dadosFormatados.motorista;
 
       if (editando) {
         await editarViagem(editando.id, dadosFormatados);
@@ -166,7 +190,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
   const abastecimentosDisponiveis = useMemo(() => {
     if (!viagemParaVincular) return [];
-    const { placa, motorista, dataInicio, dataFim } = viagemParaVincular;
+    const { placa, motoristaNome, dataInicio, dataFim } = viagemParaVincular;
     const dtInicio = dataInicio?.toDate
       ? dataInicio.toDate()
       : new Date(dataInicio);
@@ -182,7 +206,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       return (
         !ab.viagemId &&
         clean(ab.placa) === clean(placa) &&
-        clean(ab.motorista) === clean(motorista) &&
+        clean(ab.motorista) === clean(motoristaNome) &&
         dataAbastecimento >= dtInicio &&
         dataAbastecimento <= dtFim
       );
@@ -237,11 +261,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
           resultados[viagem.id] = checklists;
         } catch (error) {
-          console.error(
-            "Erro ao buscar checklists para viagem",
-            viagem.id,
-            error
-          );
+          console.error("Erro ao buscar checklists para viagem", viagem.id, error);
           resultados[viagem.id] = [];
         }
       }
@@ -284,11 +304,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         </button>
       )}
 
-      <Modal
-        isOpen={mostrarForm}
-        onClose={fecharModal}
-        title={`${tituloForm} Viagem`}
-      >
+      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Viagem`}>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField
             label="Placa (Veículo Principal)"
@@ -330,9 +346,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             error={errors.motorista}
           >
             <option value="">Selecione o motorista</option>
-            {motoristasDisponiveis.map((motorista) => (
-              <option key={motorista} value={motorista}>
-                {motorista}
+            {motoristasDisponiveis.map(({ id, nome }) => (
+              <option key={id} value={id}>
+                {nome}
               </option>
             ))}
           </FormField>
@@ -399,34 +415,27 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <div>
         {filtrados.map((v) => {
           const checklistsDaViagem = checklistsPorViagem[v.id] || [];
-
+console.log("Viagem:", v);
           // Desabilitar botão se já tem checklist daquele tipo para essa viagem (baseado no viagemId)
-          const temChecklistInicio = checklistsDaViagem.some(
-            (c) => c.tipo === "inicio"
-          );
-          const temChecklistFim = checklistsDaViagem.some(
-            (c) => c.tipo === "fim"
-          );
+          const temChecklistInicio = checklistsDaViagem.some((c) => c.tipo === "inicio");
+          const temChecklistFim = checklistsDaViagem.some((c) => c.tipo === "fim");
 
           return (
             <ListItem
               key={v.id}
-              title={`${v.placa} - ${v.motorista}`}
-              subtitle={`Destino: ${v.rota} | KM: ${
-                v.km
-              } | Período: ${formatarPeriodo(v.dataInicio, v.dataFim)}`}
+              title={`${v.placa} - ${v.carreta?.trim() || ''}- ${v.motoristaNome || ""}`}
+              subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(
+                v.dataInicio,
+                v.dataFim
+              )}`}
               onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
-              onDelete={
-                mostrarCadastrar ? () => setConfirmarId(v.id) : undefined
-              }
+              onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
               actions={[
                 {
                   label: "Vincular",
                   onClick: () => setViagemParaVincular(v),
                   style: {
-                    backgroundColor: abastecimentos.some(
-                      (ab) => ab.viagemId === v.id
-                    )
+                    backgroundColor: abastecimentos.some((ab) => ab.viagemId === v.id)
                       ? "#aaa"
                       : "#28a745",
                     border:
@@ -440,13 +449,10 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
                 },
                 {
                   label: "Checklist Início",
-                  onClick: () =>
-                    setViagemChecklist({ viagem: v, tipo: "inicio" }),
+                  onClick: () => setViagemChecklist({ viagem: v, tipo: "inicio" }),
                   style: {
                     backgroundColor: temChecklistInicio ? "#aaa" : "#f39c12",
-                    border: `1px solid ${
-                      temChecklistInicio ? "#999" : "#f39c12"
-                    }`,
+                    border: `1px solid ${temChecklistInicio ? "#999" : "#f39c12"}`,
                   },
                   disabled: temChecklistInicio,
                 },
@@ -478,9 +484,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
-        title={`Vincular Abastecimentos - Viagem ${
-          viagemParaVincular?.placa || ""
-        }`}
+        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
       >
         <div>
           <h3>Abastecimentos disponíveis para vincular:</h3>
@@ -514,10 +518,8 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
               </div>
             ))
           ) : (
-            <p>Nenhum abastecimento disponível para vincular nesta viagem.</p>
+            <p>Nenhum abastecimento disponível para esta viagem.</p>
           )}
-
-          <hr style={{ margin: "20px 0" }} />
 
           <h3>Abastecimentos já vinculados:</h3>
           {abastecimentosVinculados.length > 0 ? (
@@ -526,25 +528,19 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
                 key={ab.id}
                 style={{
                   padding: "8px",
-                  border: "1px solid #999",
+                  border: "1px solid #ccc",
                   marginBottom: "8px",
-                  backgroundColor: "#f0f0f0",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
                 }}
               >
-                <div>
-                  <div>Data: {formatData(ab.data)}</div>
-                  <div>Litros: {ab.litros}</div>
-                  <div>KM: {ab.km}</div>
-                </div>
+                <div>Data: {formatData(ab.data)}</div>
+                <div>Litros: {ab.litros}</div>
+                <div>KM: {ab.km}</div>
                 <button
                   onClick={() => desvincularAbastecimento(ab)}
                   style={{
-                    marginLeft: "20px",
+                    marginTop: "8px",
                     padding: "6px 12px",
-                    backgroundColor: "#e74c3c",
+                    backgroundColor: "#c0392b",
                     color: "#fff",
                     border: "none",
                     borderRadius: "4px",
@@ -556,28 +552,17 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
               </div>
             ))
           ) : (
-            <p>Não há abastecimentos vinculados ainda.</p>
+            <p>Sem abastecimentos vinculados.</p>
           )}
         </div>
       </Modal>
 
       {viagemChecklist && (
-        <Modal
-          isOpen={true}
+        <ChecklistViagem
+          viagem={viagemChecklist.viagem}
+          tipo={viagemChecklist.tipo}
           onClose={() => setViagemChecklist(null)}
-          title={`Checklist de ${
-            viagemChecklist.tipo === "inicio" ? "Início" : "Fim"
-          } - ${viagemChecklist.viagem?.placa}`}
-        >
-          <ChecklistViagem
-            tipo={viagemChecklist.tipo}
-            rota={viagemChecklist.viagem.rota}
-            placa={viagemChecklist.viagem.placa}
-            motorista={viagemChecklist.viagem.motorista}
-            viagemId={viagemChecklist.viagem.id}
-            onClose={() => setViagemChecklist(null)}
-          />
-        </Modal>
+        />
       )}
     </div>
   );

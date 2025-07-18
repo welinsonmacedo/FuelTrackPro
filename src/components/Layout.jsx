@@ -225,7 +225,7 @@ export default function Layout() {
       items: [
         { to: "/usuario", label: "Usuário" },
         { to: "/admin/configuracoes", label: "Configurações" },
-        { to: "/admin/licenca", label: "Licença" },
+        { to: "/admin/cadastro-usuarios", label: "Users" },
         { to: "/admin/logs", label: "Logs" },
       ],
     },

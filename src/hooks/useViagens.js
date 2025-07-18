@@ -26,7 +26,8 @@ export const useViagens = () => {
         km: data.km ?? 0,
         dataInicio: data.dataInicio ?? "",
         dataFim: data.dataFim ?? "",
-        
+        carreta: data.carreta ?? "",
+        motoristaNome: data.motoristaNome  ??  "",
       };
     });
 

@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     setUsuario(null);
     setTipoUsuario(null);
   }, []);
-
+console.log(tipoUsuario)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);

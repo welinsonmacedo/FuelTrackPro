@@ -10,7 +10,7 @@ const RoleRoute = ({ allowedRoles }) => {
   if (!usuario) return <Navigate to="/login" replace />;
 
   if (!allowedRoles.includes(tipoUsuario)) {
-    if (tipoUsuario === "motorista") {
+    if (tipoUsuario === "Motorista") {
       return <Navigate to="/motorista" replace />;
     }
     return <p>Acesso negado</p>;
