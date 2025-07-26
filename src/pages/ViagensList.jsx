@@ -28,7 +28,8 @@ import { SearchInput } from "../components/SearchInput";
 import ChecklistViagem from "./ChecklistViagem";
 
 const ViagensList = ({ mostrarCadastrar = true }) => {
-  const { viagens, adicionarViagem, editarViagem, excluirViagem } = useViagens();
+  const { viagens, adicionarViagem, editarViagem, excluirViagem } =
+    useViagens();
   const { abastecimentos } = useAbastecimentos();
   const { rotas, loading: loadingRotas } = useRotas();
   const { motoristas } = useMotoristas();
@@ -55,7 +56,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     ...new Set(
       veiculos
         .filter((v) => v.tipo !== "Carreta") // filtra veículos que NÃO são carreta
-        .map((v) => v.placa )
+        .map((v) => v.placa)
         .filter(Boolean)
     ),
   ];
@@ -69,7 +70,9 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
     return viagens.filter((v) => {
       // buscar nome do motorista pelo id salvo na viagem
       const motoristaObj = motoristas.find((m) => m.id === v.motoristaId);
-      const nomeMotorista = motoristaObj ? motoristaObj.nome : v.motoristaNome || "";
+      const nomeMotorista = motoristaObj
+        ? motoristaObj.nome
+        : v.motoristaNome || "";
 
       return (
         clean(v.placa).includes(buscaLower) ||
@@ -151,7 +154,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         ...dados,
         motoristaId: dados.motorista, // salva o id
         motoristaNome: motoristaSelecionado.nome,
-        motorista:  motoristaSelecionado.nome,
+        motorista: motoristaSelecionado.nome,
         dataInicio: Timestamp.fromDate(new Date(dados.dataInicio)),
         dataFim: Timestamp.fromDate(new Date(dados.dataFim)),
       };
@@ -261,7 +264,11 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
 
           resultados[viagem.id] = checklists;
         } catch (error) {
-          console.error("Erro ao buscar checklists para viagem", viagem.id, error);
+          console.error(
+            "Erro ao buscar checklists para viagem",
+            viagem.id,
+            error
+          );
           resultados[viagem.id] = [];
         }
       }
@@ -304,7 +311,11 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         </button>
       )}
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Viagem`}>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Viagem`}
+      >
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField
             label="Placa (Veículo Principal)"
@@ -400,7 +411,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         type="text"
         placeholder="Buscar viagens..."
         value={busca}
-        onChange={(e) => setBusca(e.target.value)}
+        onChange={(valor) => setBusca(valor)}
         style={{
           marginBottom: "20px",
           padding: "8px",
@@ -415,27 +426,36 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
       <div>
         {filtrados.map((v) => {
           const checklistsDaViagem = checklistsPorViagem[v.id] || [];
-console.log("Viagem:", v);
+          console.log("Viagem:", v);
           // Desabilitar botão se já tem checklist daquele tipo para essa viagem (baseado no viagemId)
-          const temChecklistInicio = checklistsDaViagem.some((c) => c.tipo === "inicio");
-          const temChecklistFim = checklistsDaViagem.some((c) => c.tipo === "fim");
+          const temChecklistInicio = checklistsDaViagem.some(
+            (c) => c.tipo === "inicio"
+          );
+          const temChecklistFim = checklistsDaViagem.some(
+            (c) => c.tipo === "fim"
+          );
 
           return (
             <ListItem
               key={v.id}
-              title={`${v.placa} - ${v.carreta?.trim() || ''}- ${v.motoristaNome || ""}`}
-              subtitle={`Destino: ${v.rota} | KM: ${v.km} | Período: ${formatarPeriodo(
-                v.dataInicio,
-                v.dataFim
-              )}`}
+              title={`${v.placa} - ${v.carreta?.trim() || ""}- ${
+                v.motoristaNome || ""
+              }`}
+              subtitle={`Destino: ${v.rota} | KM: ${
+                v.km
+              } | Período: ${formatarPeriodo(v.dataInicio, v.dataFim)}`}
               onEdit={mostrarCadastrar ? () => handleEdit(v) : undefined}
-              onDelete={mostrarCadastrar ? () => setConfirmarId(v.id) : undefined}
+              onDelete={
+                mostrarCadastrar ? () => setConfirmarId(v.id) : undefined
+              }
               actions={[
                 {
                   label: "Vincular",
                   onClick: () => setViagemParaVincular(v),
                   style: {
-                    backgroundColor: abastecimentos.some((ab) => ab.viagemId === v.id)
+                    backgroundColor: abastecimentos.some(
+                      (ab) => ab.viagemId === v.id
+                    )
                       ? "#aaa"
                       : "#28a745",
                     border:
@@ -449,10 +469,13 @@ console.log("Viagem:", v);
                 },
                 {
                   label: "Checklist Início",
-                  onClick: () => setViagemChecklist({ viagem: v, tipo: "inicio" }),
+                  onClick: () =>
+                    setViagemChecklist({ viagem: v, tipo: "inicio" }),
                   style: {
                     backgroundColor: temChecklistInicio ? "#aaa" : "#f39c12",
-                    border: `1px solid ${temChecklistInicio ? "#999" : "#f39c12"}`,
+                    border: `1px solid ${
+                      temChecklistInicio ? "#999" : "#f39c12"
+                    }`,
                   },
                   disabled: temChecklistInicio,
                 },
@@ -484,7 +507,9 @@ console.log("Viagem:", v);
       <Modal
         isOpen={!!viagemParaVincular}
         onClose={() => setViagemParaVincular(null)}
-        title={`Vincular Abastecimentos - Viagem ${viagemParaVincular?.placa || ""}`}
+        title={`Vincular Abastecimentos - Viagem ${
+          viagemParaVincular?.placa || ""
+        }`}
       >
         <div>
           <h3>Abastecimentos disponíveis para vincular:</h3>
@@ -558,11 +583,26 @@ console.log("Viagem:", v);
       </Modal>
 
       {viagemChecklist && (
-        <ChecklistViagem
-          viagem={viagemChecklist.viagem}
-          tipo={viagemChecklist.tipo}
+        <Modal
+          isOpen={!!viagemChecklist}
           onClose={() => setViagemChecklist(null)}
-        />
+          title={`Checklist ${
+            viagemChecklist.tipo === "inicio" ? "Início" : "Fim"
+          }`}
+        >
+          <ChecklistViagem
+            tipo={viagemChecklist.tipo}
+            viagemId={viagemChecklist.viagem.id}
+            placa={viagemChecklist.viagem.placa}
+            motorista={
+              viagemChecklist.viagem.motoristaNome ||
+              viagemChecklist.viagem.motorista ||
+              ""
+            }
+            rota={viagemChecklist.viagem.rota}
+            onClose={() => setViagemChecklist(null)}
+          />
+        </Modal>
       )}
     </div>
   );

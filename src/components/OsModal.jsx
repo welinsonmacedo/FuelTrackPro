@@ -1,22 +1,21 @@
- 
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { Modal } from "./Modal";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
-import { useCreateDespesa } from "../hooks/useFinanceiro";
 
 export function OsModal({
   isOpen,
   onClose,
   checklistId,
   fornecedores,
-  onSaved,
   defeitosDisponiveis = [],
   modoSimplificado = false,
   modoNota = false,
-  modoVisualizacao = false, 
+  modoVisualizacao = false,
+  onSaved,
 }) {
   const [osDados, setOsDados] = useState({
     oficina: "",
@@ -28,30 +27,56 @@ export function OsModal({
     desconto: 0,
   });
 
-  const temFornecedores = Array.isArray(fornecedores) && fornecedores.length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createDespesa = useCreateDespesa();
+  const temFornecedores =
+    Array.isArray(fornecedores) && fornecedores.length > 0;
+  const [defeitosParaExibir, setDefeitosParaExibir] = useState([]);
 
   useEffect(() => {
     if (!isOpen || !checklistId) return;
 
     const carregarOS = async () => {
-      const ref = doc(db, "checklists", checklistId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const dados = snap.data();
-        if (dados.osCriada && dados.osDetalhes) {
-          setOsDados({
-            oficina: dados.osDetalhes.oficina || "",
-            placa: dados.osDetalhes.placa || "",
-            dataAgendada: dados.osDetalhes.dataAgendada || "",
-            horario: dados.osDetalhes.horario || "",
-            defeitosSelecionados: dados.osDetalhes.defeitos || [],
-            itensUsados: dados.osDetalhes.itensUsados || [],
-            desconto: dados.osDetalhes.desconto || 0,
-          });
+      try {
+        const ref = doc(db, "checklists", checklistId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const dados = snap.data();
+
+          if (dados.osCriada && dados.osDetalhes) {
+            setOsDados({
+              oficina: dados.osDetalhes.oficina || "",
+              placa: dados.osDetalhes.placa || "",
+              dataAgendada: dados.osDetalhes.dataAgendada || "",
+              horario: dados.osDetalhes.horario || "",
+              defeitosSelecionados: dados.osDetalhes.defeitosSelecionados || [],
+              defeitosParaExibir: dados.osDetalhes.defeitosSelecionados || [],
+              itensUsados: dados.osDetalhes.itensUsados || [],
+              desconto: dados.osDetalhes.desconto || 0,
+            });
+
+            if (
+              modoVisualizacao &&
+              Array.isArray(dados.osDetalhes.defeitosSelecionados)
+            ) {
+              setDefeitosParaExibir(dados.osDetalhes.defeitosSelecionados);
+            }
+          } else {
+            // limpa o estado se não existir OS
+            setOsDados({
+              oficina: "",
+              placa: "",
+              dataAgendada: "",
+              horario: "",
+              defeitosSelecionados: [],
+              itensUsados: [],
+              desconto: 0,
+            });
+          }
         }
+      } catch (error) {
+        console.error("Erro ao carregar OS:", error);
+        alert("Erro ao carregar OS");
       }
     };
 
@@ -59,18 +84,23 @@ export function OsModal({
   }, [isOpen, checklistId]);
 
   const adicionarItem = () => {
-    if (modoVisualizacao) return; // bloqueia se estiver visualizando
+    if (modoVisualizacao) return;
     setOsDados((prev) => ({
       ...prev,
-      itensUsados: [...prev.itensUsados, { nome: "", valorUnitario: 0, quantidade: 1 }],
+      itensUsados: [
+        ...prev.itensUsados,
+        { nome: "", valorUnitario: 0, quantidade: 1 },
+      ],
     }));
   };
 
   const atualizarItem = (index, campo, valor) => {
-    if (modoVisualizacao) return; // bloqueia se estiver visualizando
+    if (modoVisualizacao) return;
     const novosItens = [...osDados.itensUsados];
     novosItens[index][campo] =
-      campo === "quantidade" || campo === "valorUnitario" ? Number(valor) : valor;
+      campo === "quantidade" || campo === "valorUnitario"
+        ? Number(valor)
+        : valor;
     setOsDados((prev) => ({ ...prev, itensUsados: novosItens }));
   };
 
@@ -81,7 +111,7 @@ export function OsModal({
     );
 
   const salvar = async () => {
-    if (modoVisualizacao) return; // Não salva em modo visualização
+    if (modoVisualizacao) return;
     if (isSubmitting) return;
 
     if (!osDados.oficina || !osDados.dataAgendada || !osDados.horario) {
@@ -92,34 +122,43 @@ export function OsModal({
     try {
       setIsSubmitting(true);
 
-      const ref = doc(db, "checklists", checklistId);
-      const snap = await getDoc(ref);
-      const dados = snap.exists() ? snap.data() : {};
+      const refChecklist = doc(db, "checklists", checklistId);
+      const snap = await getDoc(refChecklist);
+      const dadosChecklist = snap.exists() ? snap.data() : {};
 
-      const statusOSNovo = modoNota ? "concluida" : dados.statusOS === "concluida" ? "concluida" : "aberta";
+      const statusOSNovo = modoNota
+        ? "concluida"
+        : dadosChecklist.statusOS === "concluida"
+        ? "concluida"
+        : "aberta";
 
-      await updateDoc(ref, {
+      // Atualiza checklist com os dados do formulário
+      await updateDoc(refChecklist, {
         osCriada: true,
         statusOS: statusOSNovo,
-        dataOSCriada: dados.dataOSCriada || new Date(),
+        dataOSCriada: dadosChecklist.dataOSCriada || new Date(),
         osDetalhes: {
           ...osDados,
           totalGeral: calcularTotalItens() - osDados.desconto,
         },
       });
 
-      if (modoNota) {
-        const despesaData = {
-          tipo: "nota",
-          placa: osDados.placa,
-          descricao: `OS - Oficina: ${osDados.oficina}`,
-          valor: calcularTotalItens() - osDados.desconto,
-          data: Timestamp.fromDate(new Date(osDados.dataAgendada)),
-          checklistId,
-          status: "baixada",
-        };
-        await createDespesa(despesaData);
-      }
+      // Salva ou atualiza na coleção financeiro/os
+      const refFinanceiroOS = doc(db, "financeiro", "os", checklistId);
+
+      const dadosFinanceiros = {
+        placa: osDados.placa,
+        defeitosSelecionados: osDados.defeitosSelecionados,
+        totalGeral: calcularTotalItens() - osDados.desconto,
+        dataAgendada: osDados.dataAgendada,
+        horario: osDados.horario,
+        oficina: osDados.oficina,
+        checklistId,
+        timestamp: Timestamp.now(),
+        statusOS: statusOSNovo,
+      };
+
+      await setDoc(refFinanceiroOS, dadosFinanceiros);
 
       alert("OS salva com sucesso!");
       onSaved?.();
@@ -133,7 +172,12 @@ export function OsModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={modoNota ? "Nota de Vinculo" : "Ordem de Serviço"}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={modoNota ? "Nota de Vinculo" : "Ordem de Serviço"}
+      maxWidth={700}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -150,18 +194,26 @@ export function OsModal({
               backgroundColor: "#f9f9f9",
               display: "flex",
               gap: "30px",
+              flexWrap: "wrap",
             }}
           >
-            {temFornecedores ? (
+            {/* Oficina (select ou input) */}
+            {Array.isArray(fornecedores) && fornecedores.length > 0 ? (
               <FormField
                 label="Oficina"
                 name="oficina"
                 as="select"
                 value={osDados.oficina}
-                onChange={(e) => setOsDados((p) => ({ ...p, oficina: e.target.value }))}
-                options={fornecedores.map((f) => ({ label: f.nome, value: f.nome }))}
+                onChange={(e) =>
+                  setOsDados((p) => ({ ...p, oficina: e.target.value }))
+                }
+                options={fornecedores.map((f) => ({
+                  label: f.nome,
+                  value: f.nome,
+                }))}
                 required
-                disabled={modoVisualizacao} // desabilita no modo visualização
+                disabled={modoVisualizacao}
+                style={{ minWidth: 200 }}
               />
             ) : (
               <FormField
@@ -169,31 +221,53 @@ export function OsModal({
                 name="oficina"
                 type="text"
                 value={osDados.oficina}
-                onChange={(e) => setOsDados((p) => ({ ...p, oficina: e.target.value }))}
+                onChange={(e) =>
+                  setOsDados((p) => ({ ...p, oficina: e.target.value }))
+                }
                 required
                 disabled={modoVisualizacao}
+                style={{ minWidth: 200 }}
               />
             )}
+
+            {/* Placa editável */}
+            <FormField
+              label="Placa"
+              name="placa"
+              type="text"
+              value={osDados.placa}
+              onChange={(e) =>
+                setOsDados((p) => ({ ...p, placa: e.target.value }))
+              }
+              disabled={modoVisualizacao}
+              style={{ minWidth: 120 }}
+            />
 
             <FormField
               label="Data Agendada"
               type="date"
               value={osDados.dataAgendada}
-              onChange={(e) => setOsDados((p) => ({ ...p, dataAgendada: e.target.value }))}
+              onChange={(e) =>
+                setOsDados((p) => ({ ...p, dataAgendada: e.target.value }))
+              }
               required
               disabled={modoVisualizacao}
+              style={{ minWidth: 150 }}
             />
             <FormField
               label="Horário"
               type="time"
               value={osDados.horario}
-              onChange={(e) => setOsDados((p) => ({ ...p, horario: e.target.value }))}
+              onChange={(e) =>
+                setOsDados((p) => ({ ...p, horario: e.target.value }))
+              }
               required
               disabled={modoVisualizacao}
+              style={{ minWidth: 100 }}
             />
           </div>
 
-          {/* Defeitos */}
+          {/* Defeitos Relatados */}
           <fieldset
             style={{
               padding: 16,
@@ -202,33 +276,46 @@ export function OsModal({
               backgroundColor: "#fefefe",
               minWidth: 500,
             }}
-            disabled={modoVisualizacao} // fieldset desabilitado no modo visualização
+            disabled={modoVisualizacao}
           >
             <legend>
               <strong>Defeitos Relatados</strong>
             </legend>
-            {defeitosDisponiveis.length === 0 ? (
+            {defeitosParaExibir.length === 0 ? (
               <p>Nenhum defeito relatado.</p>
             ) : (
-              defeitosDisponiveis.map((defeito) => {
-                const isChecked = osDados.defeitosSelecionados.some((d) => d.item === defeito.item);
+              defeitosParaExibir.map((defeito) => {
+                const isChecked = osDados.defeitosSelecionados.some(
+                  (d) => d.item === defeito.item
+                );
                 return (
-                  <label key={defeito.item} style={{ display: "block", marginBottom: 6 }}>
+                  <label
+                    key={defeito.item}
+                    style={{ display: "block", marginBottom: 6 }}
+                  >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={(e) => {
-                        if (modoVisualizacao) return;
+                        ;
                         let novoArray;
                         if (e.target.checked) {
                           novoArray = [
                             ...osDados.defeitosSelecionados,
-                            { item: defeito.item, observacao: defeito.observacao },
+                            {
+                              item: defeito.item,
+                              observacao: defeito.observacao,
+                            },
                           ];
                         } else {
-                          novoArray = osDados.defeitosSelecionados.filter((d) => d.item !== defeito.item);
+                          novoArray = osDados.defeitosSelecionados.filter(
+                            (d) => d.item !== defeito.item
+                          );
                         }
-                        setOsDados((p) => ({ ...p, defeitosSelecionados: novoArray }));
+                        setOsDados((p) => ({
+                          ...p,
+                          defeitosSelecionados: novoArray,
+                        }));
                       }}
                       style={{ marginRight: 8 }}
                       disabled={modoVisualizacao}
@@ -240,7 +327,7 @@ export function OsModal({
             )}
           </fieldset>
 
-          {/* Itens usados e desconto (se não modo simplificado) */}
+          {/* Itens usados + desconto (se não modo simplificado) */}
           {!modoSimplificado && (
             <>
               <fieldset
@@ -268,7 +355,9 @@ export function OsModal({
                       type="text"
                       placeholder="Item"
                       value={item.nome}
-                      onChange={(e) => atualizarItem(index, "nome", e.target.value)}
+                      onChange={(e) =>
+                        atualizarItem(index, "nome", e.target.value)
+                      }
                       style={{ flex: 2, padding: 6 }}
                       disabled={modoVisualizacao}
                     />
@@ -276,7 +365,9 @@ export function OsModal({
                       type="number"
                       placeholder="Valor Unit."
                       value={item.valorUnitario}
-                      onChange={(e) => atualizarItem(index, "valorUnitario", e.target.value)}
+                      onChange={(e) =>
+                        atualizarItem(index, "valorUnitario", e.target.value)
+                      }
                       style={{ width: 100, padding: 6 }}
                       disabled={modoVisualizacao}
                     />
@@ -284,7 +375,9 @@ export function OsModal({
                       type="number"
                       placeholder="Qtd"
                       value={item.quantidade}
-                      onChange={(e) => atualizarItem(index, "quantidade", e.target.value)}
+                      onChange={(e) =>
+                        atualizarItem(index, "quantidade", e.target.value)
+                      }
                       style={{ width: 70, padding: 6 }}
                       disabled={modoVisualizacao}
                     />
@@ -326,19 +419,25 @@ export function OsModal({
                   label="Desconto (R$)"
                   type="number"
                   value={osDados.desconto}
-                  onChange={(e) => setOsDados((p) => ({ ...p, desconto: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setOsDados((p) => ({
+                      ...p,
+                      desconto: Number(e.target.value),
+                    }))
+                  }
                   disabled={modoVisualizacao}
                 />
                 <p style={{ marginTop: 8, fontWeight: "bold", fontSize: 16 }}>
-                  Total: R$ {(calcularTotalItens() - osDados.desconto).toFixed(2)}
+                  Total: R${" "}
+                  {(calcularTotalItens() - osDados.desconto).toFixed(2)}
                 </p>
               </div>
             </>
           )}
 
-          {/* Botão salvar só aparece se não for modo visualização */}
+          {/* Botão salvar */}
           {!modoVisualizacao && (
-            <SubmitButton type="button" onClick={salvar} loading={isSubmitting}>
+            <SubmitButton type="submit" loading={isSubmitting}>
               {modoNota ? "Salvar Nota" : "Salvar OS"}
             </SubmitButton>
           )}

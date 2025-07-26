@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { motoristaSchema } from '../schemas/motoristaSchema';
-import { useMotoristas } from '../hooks/useMotoristas';
-import { useAuditoria } from '../hooks/useAuditoria';
-import { SearchInput } from '../components/SearchInput';
-import { FormField } from '../components/FormField';
-import { ListItem } from '../components/ListItem';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { SubmitButton } from '../components/SubmitButton';
-import { Form } from '../components/Form';
-import { Modal } from '../components/Modal';
-import { formataDataInput } from '../utils/data';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { motoristaSchema } from "../schemas/motoristaSchema";
+import { useMotoristas } from "../hooks/useMotoristas";
+import { useAuditoria } from "../hooks/useAuditoria";
+import { SearchInput } from "../components/SearchInput";
+import { FormField } from "../components/FormField";
+import { ListItem } from "../components/ListItem";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { SubmitButton } from "../components/SubmitButton";
+import { Form } from "../components/Form";
+import { Modal } from "../components/Modal";
+import { formataDataInput } from "../utils/data";
 
 const MotoristasList = () => {
-  const { motoristas, adicionarMotorista, editarMotorista, excluirMotorista } = useMotoristas();
+  const { motoristas, adicionarMotorista, editarMotorista, excluirMotorista } =
+    useMotoristas();
   const { log } = useAuditoria();
 
-  const [busca, setBusca] = useState('');
+  const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [tituloForm, setTituloForm] = useState('Cadastro');
+  const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
 
   const filtrados = motoristas.filter((m) =>
@@ -54,7 +55,7 @@ const MotoristasList = () => {
 
   const abrirCadastro = () => {
     setEditando(null);
-    setTituloForm('Cadastro');
+    setTituloForm("Cadastro");
     setMostrarForm(true);
   };
 
@@ -67,22 +68,22 @@ const MotoristasList = () => {
       const dadosAntes = editando;
       await editarMotorista(editando.id, dados);
       await log(
-        'auditoriaMotoristas',
-        'Editar motorista',
-        'Atualizou dados do motorista',
+        "colecaoAuditoria",
+        "Editar motorista",
+        "Atualizou dados do motorista",
         dadosAntes,
         dados,
-        'MotoristasList'
+        "MotoristasList"
       );
     } else {
       await adicionarMotorista(dados);
       await log(
-        'auditoriaMotoristas',
-        'Criar motorista',
-        'Cadastro de novo motorista',
+        "colecaoAuditoria",
+        "Criar motorista",
+        "Cadastro de novo motorista",
         null,
         dados,
-        'MotoristasList'
+        "MotoristasList"
       );
     }
     fecharModal();
@@ -90,7 +91,7 @@ const MotoristasList = () => {
 
   const handleEdit = (item) => {
     setEditando(item);
-    setTituloForm('Editar');
+    setTituloForm("Editar");
     setMostrarForm(true);
   };
 
@@ -98,12 +99,12 @@ const MotoristasList = () => {
     const dadosAntes = motoristas.find((m) => m.id === confirmarId);
     await excluirMotorista(confirmarId);
     await log(
-      'auditoriaMotoristas',
-      'Excluir motorista',
-      'Removeu motorista',
+      "colecaoAuditoria",
+      "Excluir motorista",
+      "Removeu motorista",
       dadosAntes,
       null,
-      'MotoristasList'
+      "MotoristasList"
     );
     setConfirmarId(null);
   };
@@ -111,43 +112,47 @@ const MotoristasList = () => {
   return (
     <div
       style={{
-        maxWidth: '900px',
-        margin: '20px auto',
-        padding: '20px 15px',
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        boxSizing: 'border-box',
+        maxWidth: "900px",
+        margin: "20px auto",
+        padding: "20px 15px",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+        boxSizing: "border-box",
       }}
     >
-      <h2 style={{ marginBottom: '20px' }}>Motoristas</h2>
+      <h2 style={{ marginBottom: "20px" }}>Motoristas</h2>
 
       <button
         onClick={abrirCadastro}
         style={{
-          marginBottom: '20px',
-          padding: '12px 20px',
-          fontSize: '16px',
-          cursor: 'pointer',
-          borderRadius: '6px',
-          border: 'none',
-          backgroundColor: '#3498db',
-          color: '#fff',
-          width: '100%',
-          maxWidth: '400px',
-          boxSizing: 'border-box',
+          marginBottom: "20px",
+          padding: "12px 20px",
+          fontSize: "16px",
+          cursor: "pointer",
+          borderRadius: "6px",
+          border: "none",
+          backgroundColor: "#3498db",
+          color: "#fff",
+          width: "100%",
+          maxWidth: "400px",
+          boxSizing: "border-box",
         }}
       >
         Cadastrar Motorista
       </button>
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Motorista`}>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Motorista`}
+      >
         <Form
           onSubmit={handleSubmit(onSubmit)}
           style={{
             padding: 0,
-            border: 'none',
-            maxWidth: '100%',
-            boxSizing: 'border-box',
+            border: "none",
+            maxWidth: "100%",
+            boxSizing: "border-box",
           }}
         >
           {/* Label para datas, placeholder para outros */}
@@ -157,15 +162,15 @@ const MotoristasList = () => {
             register={register}
             error={errors.nome}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
           <FormField
@@ -174,15 +179,15 @@ const MotoristasList = () => {
             register={register}
             error={errors.cnh}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
           <FormField
@@ -191,15 +196,15 @@ const MotoristasList = () => {
             register={register}
             error={errors.categoria}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
           <FormField
@@ -209,15 +214,15 @@ const MotoristasList = () => {
             register={register}
             error={errors.dataEmissao}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
           <FormField
@@ -227,15 +232,15 @@ const MotoristasList = () => {
             register={register}
             error={errors.dataValidade}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
           <FormField
@@ -244,20 +249,20 @@ const MotoristasList = () => {
             register={register}
             error={errors.cpf}
             inputStyle={{
-              width: '100%',
-              maxWidth: '400px',
-              boxSizing: 'border-box',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              height: '38px',
-              marginBottom: '12px',
+              width: "100%",
+              maxWidth: "400px",
+              boxSizing: "border-box",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              height: "38px",
+              marginBottom: "12px",
             }}
           />
 
           <SubmitButton loading={isSubmitting}>
-            {editando ? 'Atualizar' : 'Cadastrar'}
+            {editando ? "Atualizar" : "Cadastrar"}
           </SubmitButton>
         </Form>
       </Modal>
@@ -267,17 +272,17 @@ const MotoristasList = () => {
         onChange={setBusca}
         placeholder="Buscar motoristas..."
         style={{
-          marginBottom: '20px',
-          padding: '8px',
-          width: '100%',
-          maxWidth: '400px',
-          borderRadius: '6px',
-          border: '1px solid #ccc',
-          boxSizing: 'border-box',
+          marginBottom: "20px",
+          padding: "8px",
+          width: "100%",
+          maxWidth: "400px",
+          borderRadius: "6px",
+          border: "1px solid #ccc",
+          boxSizing: "border-box",
         }}
       />
 
-      <div style={{ width: '100%', maxWidth: '900px' }}>
+      <div style={{ width: "100%", maxWidth: "900px" }}>
         {filtrados.map((m) => (
           <ListItem
             key={m.id}
@@ -285,13 +290,14 @@ const MotoristasList = () => {
             subtitle={`CNH: ${m.cnh} | CPF: ${m.cpf}`}
             onEdit={() => handleEdit(m)}
             onDelete={() => setConfirmarId(m.id)}
-            style={{ marginBottom: '12px' }}
+            style={{ marginBottom: "12px" }}
           />
         ))}
       </div>
 
       {confirmarId && (
         <ConfirmDialog
+          isOpen={true} // <-- AQUI
           title="Excluir motorista"
           message="Tem certeza que deseja excluir este motorista?"
           onConfirm={handleConfirmDelete}

@@ -163,10 +163,10 @@ const AbastecimentosList = () => {
     if (editando) {
       const dadosAntes = editando;
       await editarAbastecimento(editando.id, dadosFormatados);
-      await log("auditoriaAbastecimentos", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
+      await log("colecaoAuditoria", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
     } else {
       await adicionarAbastecimento(dadosFormatados);
-      await log("auditoriaAbastecimentos", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
+      await log("colecaoAuditoria", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
     }
     fecharModal();
   };
@@ -180,7 +180,7 @@ const AbastecimentosList = () => {
   const handleConfirmDelete = async () => {
     const dadosAntes = abastecimentos.find((a) => a.id === confirmarId);
     await excluirAbastecimento(confirmarId);
-    await log("auditoriaAbastecimentos", "Excluir abastecimento", "Removeu abastecimento", dadosAntes, null, "AbastecimentosList");
+    await log("colecaoAuditoria", "Excluir abastecimento", "Removeu abastecimento", dadosAntes, null, "AbastecimentosList");
     setConfirmarId(null);
   };
 

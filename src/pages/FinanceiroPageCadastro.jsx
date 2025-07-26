@@ -1,8 +1,11 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState ,useEffect } from "react";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../services/firebase";
 import { useFinanceiro } from "../hooks/useFinanceiro";
 import { useFinanceiroCRUD } from "../hooks/useFinanceiroCRUD";
 import DespesaForm from "../components/DespesaForm";
+import {OsModal} from "../components/OsModal"; // ajuste o caminho se precisar
 import { formatCurrency, formatData } from "../utils/data";
 
 export default function FinanceiroPageCadastro() {
@@ -18,8 +21,28 @@ export default function FinanceiroPageCadastro() {
     loadingDelete,
   } = useFinanceiroCRUD();
 
+  // ESTADOS PARA EDITAR DESPESA MANUAL
   const [editando, setEditando] = useState(null);
 
+  // ESTADOS PARA MODAL OS
+  const [osModalData, setOsModalData] = useState(null);
+  const [modoVisualizacao, setModoVisualizacao] = useState(false);
+
+const [fornecedores, setFornecedores] = useState([]);
+
+useEffect(() => {
+  const fetchFornecedores = async () => {
+    const snap = await getDocs(collection(db, "fornecedores"));
+    const lista = snap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setFornecedores(lista);
+  };
+
+  fetchFornecedores();
+}, []);
+  // Funções CRUD
   const handleCreate = async (data) => {
     try {
       await createDespesa({ ...data, origem: "manual" });
@@ -41,7 +64,6 @@ export default function FinanceiroPageCadastro() {
   };
 
   const handleDelete = async (id) => {
-     console.log("ID para deletar:", id);
     if (!window.confirm("Confirma exclusão?")) return;
     try {
       await deleteDespesa(id);
@@ -61,7 +83,11 @@ export default function FinanceiroPageCadastro() {
       {!editando ? (
         <>
           <div style={topBar}>
-            <button style={button} onClick={() => setEditando({})} disabled={loadingCreate || loadingUpdate || loadingDelete}>
+            <button
+              style={button}
+              onClick={() => setEditando({})}
+              disabled={loadingCreate || loadingUpdate || loadingDelete}
+            >
               ➕ Nova Despesa
             </button>
           </div>
@@ -70,7 +96,7 @@ export default function FinanceiroPageCadastro() {
             <p style={centerText}>Carregando despesas...</p>
           ) : (
             <>
-              {/* Despesas de OS */}
+              {/* Despesas OS */}
               <h3 style={{ marginTop: 20 }}>Despesas de Ordens de Serviço</h3>
               {despesasOS.length === 0 ? (
                 <p style={centerText}>Nenhuma despesa de OS cadastrada.</p>
@@ -94,22 +120,16 @@ export default function FinanceiroPageCadastro() {
                           <td style={td}>{d.status || "—"}</td>
                           <td style={td}>{formatCurrency(d.valor)}</td>
                           <td style={td}>
-                            {/* OS não editável nem deletável aqui */}
+                            {/* Botão Visualizar abre modal em modo visualização */}
                             <button
-                              style={editBtn}
-                              onClick={() => setEditando(d)}
-                          
-                              title="Não é possível editar despesa originada de OS"
+                              style={button}
+                              onClick={() => {
+                                setOsModalData(d);
+                                setModoVisualizacao(true);
+                              }}
+                              title="Visualizar despesa de OS"
                             >
-                              ✏️
-                            </button>
-                            <button
-                              style={deleteBtn}
-                          
-                              onClick={() => handleDelete(d.id)}
-                              title="Não é possível excluir despesa originada de OS"
-                            >
-                              🗑️
+                              👁️ Visualizar
                             </button>
                           </td>
                         </tr>
@@ -119,7 +139,21 @@ export default function FinanceiroPageCadastro() {
                 </div>
               )}
 
-              {/* Despesas manuais */}
+              {/* Modal OS */}
+              {osModalData && (
+                <OsModal
+                  isOpen={!!osModalData}
+                  onClose={() => {
+                    setOsModalData(null);
+                    setModoVisualizacao(false);
+                  }}
+                  checklistId={osModalData.checklistId || osModalData.id}
+                  fornecedores={fornecedores}
+                  modoVisualizacao={modoVisualizacao}
+                />
+              )}
+
+              {/* Despesas Manuais */}
               <h3 style={{ marginTop: 40 }}>Despesas Cadastradas Manualmente</h3>
               {despesasManuais.length === 0 ? (
                 <p style={centerText}>Nenhuma despesa manual cadastrada.</p>
@@ -192,7 +226,7 @@ export default function FinanceiroPageCadastro() {
   );
 }
 
-// Estilos (copie do seu código original)
+// Estilos (se quiser posso ajudar a colocar em CSS separado)
 const container = { maxWidth: 1000, margin: "0 auto", padding: 20 };
 const title = { fontSize: 24, marginBottom: 20 };
 const topBar = { display: "flex", justifyContent: "flex-end", marginBottom: 10 };
