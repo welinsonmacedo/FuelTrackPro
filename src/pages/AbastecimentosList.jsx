@@ -34,7 +34,9 @@ const AbastecimentosList = () => {
     editarAbastecimento,
     excluirAbastecimento,
   } = useAbastecimentos();
-  const { veiculos } = useVeiculos();
+const { veiculos, atualizarVeiculo } = useVeiculos();
+
+
   const { motoristas } = useMotoristas();
   const { fornecedores } = useFornecedores();
   const { log } = useAuditoria();
@@ -158,18 +160,33 @@ const AbastecimentosList = () => {
   const fecharModal = () => setMostrarForm(false);
 
   const onSubmit = async (dados) => {
-    const dadosFormatados = { ...dados, data: new Date(dados.data) };
+  const dadosFormatados = { ...dados, data: new Date(dados.data) };
 
-    if (editando) {
-      const dadosAntes = editando;
-      await editarAbastecimento(editando.id, dadosFormatados);
-      await log("colecaoAuditoria", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
-    } else {
-      await adicionarAbastecimento(dadosFormatados);
-      await log("colecaoAuditoria", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
+  if (editando) {
+    const dadosAntes = editando;
+    await editarAbastecimento(editando.id, dadosFormatados);
+    await log("colecaoAuditoria", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
+
+    const veiculoAtual = veiculos.find((v) => v.placa === dadosFormatados.placa);
+    if (veiculoAtual) {
+      const kmAtualVeiculo = Number(veiculoAtual.kmAtual || 0);
+      if (dadosFormatados.km > kmAtualVeiculo) {
+        await atualizarVeiculo(veiculoAtual.id, { kmAtual: dadosFormatados.km });
+      }
     }
-    fecharModal();
-  };
+  } else {
+    await adicionarAbastecimento(dadosFormatados);
+    await log("colecaoAuditoria", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
+
+    const veiculoAtual = veiculos.find((v) => v.placa === dadosFormatados.placa);
+    if (veiculoAtual) {
+      await atualizarVeiculo(veiculoAtual.id, { kmAtual: dadosFormatados.km });
+    }
+  }
+
+  fecharModal();
+};
+
 
   const handleEdit = (item) => {
     setEditando(item);

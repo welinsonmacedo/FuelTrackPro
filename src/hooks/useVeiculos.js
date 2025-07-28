@@ -77,11 +77,15 @@ export const useVeiculos = () => {
       setLoading(false);
     }
   };
-
+ const atualizarVeiculo = async (id, dados) => {
+    const veiculoRef = doc(db, "veiculos", id);
+    await updateDoc(veiculoRef, dados);
+  };
   return {
     veiculos,
     loading,
     error,
+    atualizarVeiculo,
     adicionarVeiculo,
     editarVeiculo,
     excluirVeiculo,
