@@ -25,8 +25,10 @@ const CadastroModeloVeiculo = ({ modeloId, onSalvo }) => {
     { sigla: "T2EE", descricao: "Traseiro 2 Externo Esquerdo" },
     { sigla: "T2ID", descricao: "Traseiro 2 Interno Direito" },
     { sigla: "T2ED", descricao: "Traseiro 2 Externo Direito" },
-     { sigla: "T3ID", descricao: "Traseiro 2 Interno Direito" },
+    { sigla: "T3ID", descricao: "Traseiro 2 Interno Direito" },
     { sigla: "T3ED", descricao: "Traseiro 2 Externo Direito" },
+    { sigla: "T3IE", descricao: "Traseiro 2 Interno Direito" },
+    { sigla: "T3EE", descricao: "Traseiro 2 Externo Direito" },
     { sigla: "ESTEPE", descricao: "Pneu de Estepe" },
   ];
   // Se for editar, carrega dados do modelo

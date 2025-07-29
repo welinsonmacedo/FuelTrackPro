@@ -76,10 +76,15 @@ const styles = {
 export const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
-  // Reorganiza os children dentro de divs lado a lado automaticamente
-  const contentWrapped = React.Children.map(children, (child) => (
-    <div style={styles.inputItem}>{child}</div>
-  ));
+  const isForm =
+    React.Children.count(children) === 1 &&
+    (children.type === "form" || children.type?.name === "Form");
+
+  const contentWrapped = isForm
+    ? children
+    : React.Children.map(children, (child) => (
+        <div style={styles.inputItem}>{child}</div>
+      ));
 
   return (
     <div style={styles.containerMain}>
