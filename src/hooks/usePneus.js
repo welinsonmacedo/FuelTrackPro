@@ -126,6 +126,11 @@ export function usePneus() {
       atualizadoEm: serverTimestamp(),
     });
   };
+const salvarMarcaPneu = async (idPneu, marcaFogo) => {
+  if (!idPneu) throw new Error("ID do pneu não informado");
+  const pneuRef = doc(db, "pneus", idPneu);
+  await updateDoc(pneuRef, { marcaFogo });
+};
 
   return {
     fetchPneus,
@@ -133,5 +138,6 @@ export function usePneus() {
     atualizarPneusVeiculo,
     deletePneu,
     removerPneuComAcao,
+    salvarMarcaPneu
   };
 }

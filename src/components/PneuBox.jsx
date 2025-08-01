@@ -42,10 +42,12 @@ export function PneuBox({
         display:"flex",
         alignItems:"left",
         flexDirection:"column",
+        gap:5,
         marginBottom:20
         
       }}>
-            <strong>{pos}</strong> 
+            <strong>{pos}</strong>
+            <strong>{pneu.marcaFogo}</strong>  
             <p>{pneu.marca} </p> 
             <p>{pneu.modelo}</p>
             <p>{pneu.status}</p>

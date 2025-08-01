@@ -4,25 +4,21 @@ export function ModalRemocaoPneu({
   aberto,
   pneu,
   placa,
-  recapagens = [],
   acaoRemover,
   setAcaoRemover,
-  recapSelecionada,
-  setRecapSelecionada,
   kmDesinstalacao,
   setKmDesinstalacao,
   onFechar,
   onConfirmar,
+  loading,
 }) {
   if (!aberto) return null;
 
   const acoesOptions = [
     "",
-    "Removido do veículo",
-    "Troca por desgaste",
-    "Enviado para recapagem",
-    "Reparo",
-    "Outro",
+    "estoque",
+    "recap",
+    "descarte",
   ];
 
   return (
@@ -61,26 +57,11 @@ export function ModalRemocaoPneu({
             value={acaoRemover || ""}
             onChange={(e) => setAcaoRemover(e.target.value)}
             style={{ width: "100%", marginBottom: 10, padding: 6 }}
+            disabled={loading}
           >
             {acoesOptions.map((acao, idx) => (
               <option key={idx} value={acao}>
-                {acao === "" ? "-- Selecione --" : acao}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Recapagem:
-          <select
-            value={recapSelecionada || ""}
-            onChange={(e) => setRecapSelecionada(e.target.value)}
-            style={{ width: "100%", marginBottom: 10, padding: 6 }}
-          >
-            <option value="">-- Selecione --</option>
-            {recapagens.map((r) => (
-              <option key={r.id} value={r.nome}>
-                {r.nome}
+                {acao === "" ? "-- Selecione --" : acao.charAt(0).toUpperCase() + acao.slice(1)}
               </option>
             ))}
           </select>
@@ -95,6 +76,7 @@ export function ModalRemocaoPneu({
             onChange={(e) => setKmDesinstalacao(e.target.value)}
             placeholder="Km desinstalação"
             style={{ width: "100%", marginBottom: 10, padding: 6 }}
+            disabled={loading}
           />
         </label>
 
@@ -108,6 +90,7 @@ export function ModalRemocaoPneu({
               borderRadius: 4,
               cursor: "pointer",
             }}
+            disabled={loading}
           >
             Cancelar
           </button>
@@ -121,9 +104,9 @@ export function ModalRemocaoPneu({
               borderRadius: 4,
               cursor: "pointer",
             }}
-            disabled={!acaoRemover} // só habilita confirmar se ação for escolhida
+            disabled={!acaoRemover || loading}
           >
-            Confirmar
+            {loading ? "Removendo..." : "Confirmar"}
           </button>
         </div>
       </div>
