@@ -15,7 +15,8 @@ import { Modal } from "../components/Modal";
 import CadastroModeloVeiculo from "../components/CadastroModeloVeiculo";
 
 const VeiculosList = () => {
-  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } = useVeiculos();
+  const { veiculos, adicionarVeiculo, editarVeiculo, excluirVeiculo } =
+    useVeiculos();
   const { modelos } = useModelosVeiculos(); // Pega modelos do hook
   const { log } = useAuditoria();
 
@@ -99,8 +100,14 @@ const VeiculosList = () => {
     if (payload.tipo === "Carreta") {
       payload.capacidadeTanque = null;
       payload.tipoCombustivel = null;
+      // Mantém os campos extras para Carreta (comprimento, largura, altura, numeroEixos, pesoProprio)
     } else {
       payload.capacidadeCarga = null;
+      payload.comprimento = null;
+      payload.largura = null;
+      payload.altura = null;
+      payload.numeroEixos = null;
+      payload.pesoProprio = null;
     }
 
     return payload;
@@ -170,15 +177,41 @@ const VeiculosList = () => {
       setConfirmarId(null);
     }
   };
+  const tiposVeiculo = [
+  "Carreta",
+  "Cavalo Mecânico",
+  "Truck",
+  "3/4",
+  "Popular",
+];
+  const getBackgroundColorByTipo = (tipo) => {
+    switch (tipo) {
+      case "Carreta":
+        return "#e1e2f8";
+      case "Cavalo Mecânico":
+        return "#eefaac";
+      case "Truck":
+        return "#96f89e";
+      case "3/4":
+        return "#dbb0f5";
+      case "Popular":
+        return "#ff90c4";
+      default:
+        return "#ffffff";
+    }
+  };
 
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "20px auto",
+         maxWidth: "100%",
+        minheight:"100vh",
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
+        boxSizing: "border-box",
+        
+        
       }}
     >
       <div
@@ -241,17 +274,64 @@ const VeiculosList = () => {
             border: "1px solid #ccc",
           }}
         />
+        <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          marginBottom: "20px",
+          alignItems: "center",
+        }}
+      >
+        
+
+        {tiposVeiculo.map((tipo) => (
+          <div
+            key={tipo}
+            style={{ display: "flex", alignItems: "center", gap: "5px" }}
+          >
+            <span
+              style={{
+                width: "20px",
+                height: "20px",
+                backgroundColor: getBackgroundColorByTipo(tipo),
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                display: "inline-block",
+              }}
+            />
+            <span>{tipo}</span>
+          </div>
+        ))}
       </div>
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Veículo`}>
-        <Form onSubmit={handleSubmit(onSubmit)} style={{ padding: 0, border: "none" }}>
+      </div>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Veículo`}
+      >
+        <Form
+          onSubmit={handleSubmit(onSubmit)}
+          style={{ padding: 0, border: "none" }}
+        >
           {submitError && (
             <div style={{ color: "red", marginBottom: "15px" }}>
               {submitError}
             </div>
           )}
 
-          <FormField label="Placa" name="placa" register={register} error={errors.placa} />
-          <FormField label="Marca" name="marca" register={register} error={errors.marca} />
+          <FormField
+            label="Placa"
+            name="placa"
+            register={register}
+            error={errors.placa}
+          />
+          <FormField
+            label="Marca"
+            name="marca"
+            register={register}
+            error={errors.marca}
+          />
 
           {/* Alteração aqui: campo Modelo como select */}
           <FormField
@@ -290,70 +370,127 @@ const VeiculosList = () => {
             <option value="Popular">Popular</option>
             <option value="3/4">3/4</option>
           </FormField>
-          <FormField label="Chassi" name="chassi" register={register} error={errors.chassi} />
-          <FormField label="Renavam" name="renavam" register={register} error={errors.renavam} />
-          <FormField label="Cor" name="cor" register={register} error={errors.cor} />
-          <FormField label="Filial" name="filial" register={register} error={errors.filial} />
+          <FormField
+            label="Chassi"
+            name="chassi"
+            register={register}
+            error={errors.chassi}
+          />
+          <FormField
+            label="Renavam"
+            name="renavam"
+            register={register}
+            error={errors.renavam}
+          />
+          <FormField
+            label="Cor"
+            name="cor"
+            register={register}
+            error={errors.cor}
+          />
+          <FormField
+            label="Filial"
+            name="filial"
+            register={register}
+            error={errors.filial}
+          />
 
-          {tipo && tipo !== "Carreta" && (
+          {tipo === "Carreta" && (
             <>
               <FormField
-                label="Capacidade Tanque (L)"
-                name="capacidadeTanque"
+                label="Capacidade de Carga (kg)"
+                name="capacidadeCarga"
                 type="number"
                 register={register}
-                error={errors.capacidadeTanque}
+                error={errors.capacidadeCarga}
               />
               <FormField
-                label="Tipo de Combustível"
-                name="tipoCombustivel"
-                as="select"
+                label="Comprimento (m)"
+                name="comprimento"
+                type="number"
+                step="0.01"
                 register={register}
-                error={errors.tipoCombustivel}
-              >
-                <option value="">Selecione</option>
-                <option value="Diesel S10">Diesel S10</option>
-                <option value="Diesel Comum">Diesel Comum</option>
-                <option value="Gasolina">Gasolina</option>
-                <option value="Etanol">Etanol</option>
-              </FormField>
+                error={errors.comprimento}
+              />
+              <FormField
+                label="Largura (m)"
+                name="largura"
+                type="number"
+                step="0.01"
+                register={register}
+                error={errors.largura}
+              />
+              <FormField
+                label="Altura (m)"
+                name="altura"
+                type="number"
+                step="0.01"
+                register={register}
+                error={errors.altura}
+              />
+              <FormField
+                label="Nº Eixos"
+                name="numeroEixos"
+                type="number"
+                register={register}
+                error={errors.numeroEixos}
+              />
+              <FormField
+                label="Peso Próprio (kg)"
+                name="pesoProprio"
+                type="number"
+                register={register}
+                error={errors.pesoProprio}
+              />
             </>
           )}
 
-          {tipo === "Carreta" && (
-            <FormField
-              label="Capacidade de Carga (kg)"
-              name="capacidadeCarga"
-              type="number"
-              register={register}
-              error={errors.capacidadeCarga}
-            />
-          )}
-
-          <SubmitButton loading={isSubmitting} disabled={!isValid || isSubmitting}>
+          <SubmitButton
+            loading={isSubmitting}
+            disabled={!isValid || isSubmitting}
+          >
             {editando ? "Atualizar" : "Cadastrar"}
           </SubmitButton>
         </Form>
       </Modal>
-
-      <Modal isOpen={mostrarModalModelo} onClose={fecharCadastroModelo} title="Cadastrar Modelo de Veículo">
+      <Modal
+        isOpen={mostrarModalModelo}
+        onClose={fecharCadastroModelo}
+        title="Cadastrar Modelo de Veículo"
+      >
         <CadastroModeloVeiculo onSalvo={fecharCadastroModelo} />
       </Modal>
-
-      <div style={{ width: "100%", maxWidth: "900px" }}>
+      
+      
+      <div style={{ width: "100%",  display: "flex",
+        flexWrap: "wrap",
+        gap: "10px", padding:"30px"}}>
         {filtrados.map((v) => (
           <ListItem
             key={v.id}
             title={`${v.placa} - ${v.modelo || ""}`}
-            subtitle={`Tipo: ${v.tipo || "-"} | Combustível: ${v.tipoCombustivel || "-"}`}
+            subtitle={
+              v.tipo === "Carreta"
+                ? `Tipo: ${v.tipo || "-"} | Medidas (C x L x A): ${
+                    v.comprimento || "-"
+                  }m x ${v.largura || "-"}m x ${v.altura || "-"}m`
+                : `Tipo: ${v.tipo || "-"} | Combustível: ${
+                    v.tipoCombustivel || "-"
+                  }`
+            }
             onEdit={() => handleEdit(v)}
             onDelete={() => setConfirmarId(v.id)}
             isDeleting={deleting && confirmarId === v.id}
-            style={{ marginBottom: "12px" }}
+            style={{
+              marginBottom: "12px",
+              backgroundColor: getBackgroundColorByTipo(v.tipo),
+              borderRadius: "6px",
+              padding: "10px",
+              width: "calc(30% - 10px)"
+            }}
           />
         ))}
       </div>
-
       {confirmarId !== null && (
         <ConfirmDialog
           isOpen={confirmarId !== null}

@@ -33,55 +33,56 @@ export function OsModal({
     Array.isArray(fornecedores) && fornecedores.length > 0;
   const [defeitosParaExibir, setDefeitosParaExibir] = useState([]);
 
-  useEffect(() => {
-    if (!isOpen || !checklistId) return;
+ useEffect(() => {
+  if (!isOpen || !checklistId) return;
 
-    const carregarOS = async () => {
-      try {
-        const ref = doc(db, "checklists", checklistId);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const dados = snap.data();
+  const carregarOS = async () => {
+    try {
+      const ref = doc(db, "checklists", checklistId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const dados = snap.data();
 
-          if (dados.osCriada && dados.osDetalhes) {
-            setOsDados({
-              oficina: dados.osDetalhes.oficina || "",
-              placa: dados.osDetalhes.placa || "",
-              dataAgendada: dados.osDetalhes.dataAgendada || "",
-              horario: dados.osDetalhes.horario || "",
-              defeitosSelecionados: dados.osDetalhes.defeitosSelecionados || [],
-              defeitosParaExibir: dados.osDetalhes.defeitosSelecionados || [],
-              itensUsados: dados.osDetalhes.itensUsados || [],
-              desconto: dados.osDetalhes.desconto || 0,
-            });
+        if (dados.osCriada && dados.osDetalhes) {
+          setOsDados({
+            oficina: dados.osDetalhes.oficina || "",
+            placa: dados.osDetalhes.placa || "",
+            dataAgendada: dados.osDetalhes.dataAgendada || "",
+            horario: dados.osDetalhes.horario || "",
+            defeitosSelecionados: dados.osDetalhes.defeitosSelecionados || [],
+            itensUsados: dados.osDetalhes.itensUsados || [],
+            desconto: dados.osDetalhes.desconto || 0,
+          });
 
-            if (
-              modoVisualizacao &&
-              Array.isArray(dados.osDetalhes.defeitosSelecionados)
-            ) {
-              setDefeitosParaExibir(dados.osDetalhes.defeitosSelecionados);
-            }
+          if (modoVisualizacao) {
+            setDefeitosParaExibir(dados.osDetalhes.defeitosSelecionados || []);
           } else {
-            // limpa o estado se não existir OS
-            setOsDados({
-              oficina: "",
-              placa: "",
-              dataAgendada: "",
-              horario: "",
-              defeitosSelecionados: [],
-              itensUsados: [],
-              desconto: 0,
-            });
+            // se não for visualização, exiba todos defeitos disponíveis, que você deve passar via props
+            // para isso use defeitosDisponiveis que vem do ChecklistPage
+            setDefeitosParaExibir(defeitosDisponiveis);
           }
+        } else {
+          setOsDados({
+            oficina: "",
+            placa: "",
+            dataAgendada: "",
+            horario: "",
+            defeitosSelecionados: [],
+            itensUsados: [],
+            desconto: 0,
+          });
+          setDefeitosParaExibir(defeitosDisponiveis);
         }
-      } catch (error) {
-        console.error("Erro ao carregar OS:", error);
-        alert("Erro ao carregar OS");
       }
-    };
+    } catch (error) {
+      console.error("Erro ao carregar OS:", error);
+      alert("Erro ao carregar OS");
+    }
+  };
 
-    carregarOS();
-  }, [isOpen, checklistId]);
+  carregarOS();
+}, [isOpen, checklistId, defeitosDisponiveis, modoVisualizacao]);
+
 
   const adicionarItem = () => {
     if (modoVisualizacao) return;

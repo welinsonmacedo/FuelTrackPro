@@ -15,8 +15,12 @@ import { Modal } from "../components/Modal";
 const tiposFornecedor = ["Oficina", "Postos", "Outros"];
 
 const FornecedoresList = () => {
-  const { fornecedores, adicionarFornecedor, editarFornecedor, excluirFornecedor } =
-    useFornecedores();
+  const {
+    fornecedores,
+    adicionarFornecedor,
+    editarFornecedor,
+    excluirFornecedor,
+  } = useFornecedores();
   const { log } = useAuditoria();
 
   const [busca, setBusca] = useState("");
@@ -25,18 +29,18 @@ const FornecedoresList = () => {
   const [tituloForm, setTituloForm] = useState("Cadastro");
   const [confirmarId, setConfirmarId] = useState(null);
 
-const filtrados = fornecedores.filter((f) => {
-  const termo = busca.toLowerCase();
-  return (
-    (f.nome?.toLowerCase() || "").includes(termo) ||
-    (f.cnpj || "").includes(termo) ||
-    (f.rua?.toLowerCase() || "").includes(termo) ||
-    (f.bairro?.toLowerCase() || "").includes(termo) ||
-    (f.cidade?.toLowerCase() || "").includes(termo) ||
-    (f.estado?.toLowerCase() || "").includes(termo) ||
-    (f.tipo?.toLowerCase() || "").includes(termo)
-  );
-});
+  const filtrados = fornecedores.filter((f) => {
+    const termo = busca.toLowerCase();
+    return (
+      (f.nome?.toLowerCase() || "").includes(termo) ||
+      (f.cnpj || "").includes(termo) ||
+      (f.rua?.toLowerCase() || "").includes(termo) ||
+      (f.bairro?.toLowerCase() || "").includes(termo) ||
+      (f.cidade?.toLowerCase() || "").includes(termo) ||
+      (f.estado?.toLowerCase() || "").includes(termo) ||
+      (f.tipo?.toLowerCase() || "").includes(termo)
+    );
+  });
 
   const {
     register,
@@ -129,34 +133,60 @@ const filtrados = fornecedores.filter((f) => {
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "20px auto",
+         maxWidth: "100%",
+        minheight:"100vh",
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
         boxSizing: "border-box",
+        
+        
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Fornecedores</h2>
-
-      <button
-        onClick={abrirCadastro}
+      <div
         style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#3498db",
-          color: "#fff",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
         }}
       >
-        Cadastrar Fornecedor
-      </button>
+        <h2 style={{ marginBottom: "20px" }}>Fornecedores</h2>
+
+        <button
+          onClick={abrirCadastro}
+          style={{
+            marginBottom: "20px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: "#3498db",
+            color: "#fff",
+            width: "100%",
+            maxWidth: "400px",
+            boxSizing: "border-box",
+          }}
+        >
+          Cadastrar Fornecedor
+        </button>
+        <SearchInput
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar fornecedores..."
+          style={{
+            marginBottom: "20px",
+            padding: "8px",
+            width: "100%",
+            maxWidth: "400px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
 
       <Modal
         isOpen={mostrarForm}
@@ -317,7 +347,11 @@ const filtrados = fornecedores.filter((f) => {
           {/* Select Tipo */}
           <label
             htmlFor="tipo"
-            style={{ display: "block", fontWeight: "bold", marginBottom: "4px" }}
+            style={{
+              display: "block",
+              fontWeight: "bold",
+              marginBottom: "4px",
+            }}
           >
             Tipo
           </label>
@@ -343,7 +377,9 @@ const filtrados = fornecedores.filter((f) => {
             ))}
           </select>
           {errors.tipo && (
-            <span style={{ color: "red", fontSize: "12px" }}>{errors.tipo.message}</span>
+            <span style={{ color: "red", fontSize: "12px" }}>
+              {errors.tipo.message}
+            </span>
           )}
 
           <SubmitButton loading={isSubmitting}>
@@ -352,22 +388,15 @@ const filtrados = fornecedores.filter((f) => {
         </Form>
       </Modal>
 
-      <SearchInput
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar fornecedores..."
+      <div
         style={{
-          marginBottom: "20px",
-          padding: "8px",
           width: "100%",
-          maxWidth: "400px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          boxSizing: "border-box",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "30px",
         }}
-      />
-
-      <div style={{ width: "100%", maxWidth: "900px" }}>
+      >
         {filtrados.map((f) => (
           <ListItem
             key={f.id}
@@ -375,7 +404,7 @@ const filtrados = fornecedores.filter((f) => {
             subtitle={`${f.rua}, ${f.numero} - ${f.bairro} | ${f.cidade} - ${f.estado} | CEP: ${f.cep}`}
             onEdit={() => handleEdit(f)}
             onDelete={() => setConfirmarId(f.id)}
-            style={{ marginBottom: "12px" }}
+            style={{ marginBottom: "12px" ,width: "calc(30% - 10px)"}}
           />
         ))}
       </div>

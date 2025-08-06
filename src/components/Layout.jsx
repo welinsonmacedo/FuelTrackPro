@@ -8,11 +8,11 @@ const sidebarStyle = (collapsed) => ({
   height: "100vh",
   width: collapsed ? "60px" : "220px",
   backgroundColor: "#2c3e50",
-  color: "#ecf0f1",
-  paddingTop: "20px",
+  color: "#f1ecec",
+  paddingTop: "0px",
   transition: "width 0.3s ease",
   overflowY: "auto",
-  boxSizing: "border-box",
+  boxSizing: "border-box",  
   display: "flex",
   flexDirection: "column",
 });
@@ -49,10 +49,10 @@ const submenuItemStyle = (active) => ({
 
 const contentStyle = (collapsed) => ({
   marginLeft: collapsed ? "60px" : "220px",
-  padding: "20px",
+  padding: "0px",
   transition: "margin-left 0.3s ease",
   minHeight: "100vh",
-  backgroundColor: "#f4f6f8",
+
   boxSizing: "border-box",
 });
 

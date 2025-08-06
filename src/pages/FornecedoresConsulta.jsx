@@ -18,10 +18,10 @@ const FornecedoresConsulta = () => {
   return (
     <div
       style={{
-        maxWidth: 1200,
+        maxWidth: "100%",
         margin: "0 auto",
         padding: "2rem",
-        height: "80vh",      // limita altura total
+        height: "100vh", // limita altura total
         display: "flex",
         flexDirection: "column",
       }}
@@ -38,10 +38,20 @@ const FornecedoresConsulta = () => {
       >
         <h2 style={{ marginBottom: "1rem" }}>🏢 Consulta de Fornecedores</h2>
 
-        <SearchInput
+        <input
           placeholder="Buscar por nome, CNPJ ou telefone..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
+          style={{
+            marginBottom: "20px",
+            padding: "12px 16px",
+            width: "100%",
+            fontSize: "16px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            outline: "none",
+            transition: "border 0.2s ease-in-out",
+          }}
         />
       </div>
 
@@ -49,7 +59,8 @@ const FornecedoresConsulta = () => {
         style={{
           overflowY: "auto",
           marginTop: "1rem",
-          flexGrow: 1,     // ocupa espaço restante
+          flexGrow: 1,
+          minWidth: "100%",
         }}
       >
         {loading ? (

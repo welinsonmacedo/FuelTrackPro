@@ -5,7 +5,7 @@ export default function Button({ children, disabled, onClick, type = "button" })
       disabled={disabled}
       onClick={onClick}
       style={{
-        backgroundColor: disabled ? '#a5b4fc' : '#2563eb',
+        backgroundColor: disabled ? '#a5b4fc' : '#b5c3e0',
         color: 'white',
         border: 'none',
         padding: '0.6rem 1.2rem',

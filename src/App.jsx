@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-
+import "./App.css"
 import { UIProvider } from "./contexts/UIContext";
 import { useAuth } from "./contexts/AuthContext"; // importa seu hook correto
 import PrivateRoute from "./routes/PrivateRoute";

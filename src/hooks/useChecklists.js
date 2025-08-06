@@ -1,61 +1,75 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { db } from "../services/firebase";
-import { collection, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 
-export const useChecklists = ({
-  viagemId = null,
-  veiculoId = null,
-  dataInicio = null,
-  dataFim = null,
-} = {}) => {
+export const useChecklists = (filtrosFirebase = []) => {
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Função para salvar checklist
   const salvarChecklist = async (dados) => {
     const ref = collection(db, "checklists");
     await addDoc(ref, {
       ...dados,
+      deletado: false,
       dataRegistro: new Date(),
     });
   };
 
-  // Função para listar checklists com filtros opcionais
-  const listarChecklists = async () => {
+  const carregarChecklists = async () => {
     setLoading(true);
     try {
       const ref = collection(db, "checklists");
-      const conditions = [];
+      const conditions = [where("deletado", "==", false)];
 
-      if (viagemId) {
-        conditions.push(where("viagemId", "==", viagemId));
-      }
-      if (veiculoId) {
-        conditions.push(where("veiculoId", "==", veiculoId));
-      }
-      if (dataInicio) {
-        conditions.push(where("data", ">=", Timestamp.fromDate(new Date(dataInicio))));
-      }
-      if (dataFim) {
-        conditions.push(where("data", "<=", Timestamp.fromDate(new Date(dataFim))));
-      }
+      filtrosFirebase.forEach(([campo, op, valor]) => {
+        conditions.push(where(campo, op, valor));
+      });
 
-      const q = conditions.length > 0 ? query(ref, ...conditions) : ref;
-
+      const q = query(ref, ...conditions);
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setChecklists(data);
     } catch (error) {
       console.error("Erro ao carregar checklists:", error);
       setChecklists([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Recarrega quando algum filtro mudar
-  useEffect(() => {
-    listarChecklists();
-  }, [viagemId, veiculoId, dataInicio, dataFim]);
+  const excluirChecklist = async (checklistId) => {
+    try {
+      if (!checklistId) throw new Error("ID do checklist não fornecido");
+      await deleteDoc(doc(db, "checklists", checklistId));
+      await carregarChecklists();
+    } catch (error) {
+      console.error("Erro ao excluir checklist:", error);
+      throw error;
+    }
+  };
 
-  return { checklists, loading, salvarChecklist, listarChecklists };
+  useEffect(() => {
+    carregarChecklists();
+  }, [JSON.stringify(filtrosFirebase)]); // disparar quando os filtros mudarem
+
+  return {
+    checklists,
+    loading,
+    salvarChecklist,
+    carregarChecklists,
+    excluirChecklist,
+  };
 };

@@ -112,34 +112,58 @@ const MotoristasList = () => {
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "20px auto",
+        maxWidth: "100%",
+        height:"100vh",
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
         boxSizing: "border-box",
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Motoristas</h2>
-
-      <button
-        onClick={abrirCadastro}
+      <div
         style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#3498db",
-          color: "#fff",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
         }}
       >
-        Cadastrar Motorista
-      </button>
+        <h2 style={{ marginBottom: "20px" }}>Motoristas</h2>
+
+        <button
+          onClick={abrirCadastro}
+          style={{
+            marginBottom: "20px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: "#66869c",
+            color: "#fff",
+            width: "100%",
+            maxWidth: "400px",
+            boxSizing: "border-box",
+          }}
+        >
+          Cadastrar Motorista
+        </button>
+        <SearchInput
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar motoristas..."
+          style={{
+            marginBottom: "20px",
+            padding: "8px",
+            width: "100%",
+            maxWidth: "400px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
 
       <Modal
         isOpen={mostrarForm}
@@ -267,22 +291,15 @@ const MotoristasList = () => {
         </Form>
       </Modal>
 
-      <SearchInput
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar motoristas..."
+      <div
         style={{
-          marginBottom: "20px",
-          padding: "8px",
           width: "100%",
-          maxWidth: "400px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          boxSizing: "border-box",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "30px",
         }}
-      />
-
-      <div style={{ width: "100%", maxWidth: "900px" }}>
+      >
         {filtrados.map((m) => (
           <ListItem
             key={m.id}
@@ -290,7 +307,7 @@ const MotoristasList = () => {
             subtitle={`CNH: ${m.cnh} | CPF: ${m.cpf}`}
             onEdit={() => handleEdit(m)}
             onDelete={() => setConfirmarId(m.id)}
-            style={{ marginBottom: "12px" }}
+            style={{ marginBottom: "12px", width: "calc(30% - 10px)" }}
           />
         ))}
       </div>

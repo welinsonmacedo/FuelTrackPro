@@ -321,30 +321,32 @@ const ManutencoesList = () => {
 
   return (
     <div
-      style={{
-        maxWidth: "900px",
-        margin: "20px auto",
+    style={{
+        maxWidth: "100%",
+        height:"100vh",
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
+        boxSizing: "border-box",
       }}
     >
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
+         style={{
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
         }}
       >
         <h2 style={{ marginBottom: "20px" }}>Manutenções</h2>
         <button
           onClick={tipos}
           style={{
-            marginBottom: "10px",
+            margin: "10px",
             padding: "10px 10px",
             fontSize: "16px",
-            backgroundColor: "#cfd3d6",
+            backgroundColor: "#96a1aa",
             color: "#110a0a",
             border: "none",
             borderRadius: "6px",
@@ -354,28 +356,31 @@ const ManutencoesList = () => {
         >
           Tipos de Manutenção
         </button>
-      </div>
-
-      <button
+          <button
         onClick={abrirCadastro}
         style={{
-          marginBottom: "20px",
-          padding: "12px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-          borderRadius: "6px",
-          border: "none",
-          backgroundColor: "#4df55b",
-          color: "#1e1f3b",
-          fontWeight: "900",
-          width: "100%",
-          maxWidth: "400px",
-          boxSizing: "border-box",
-        }}
+            margin: "10px",
+            padding: "10px 10px",
+            fontSize: "16px",
+            backgroundColor: "#80eb9b",
+            color: "#110a0a",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
         type="button"
       >
         Lançar Manutenção
       </button>
+         <SearchInput
+        value={busca}
+        onChange={setBusca}
+        placeholder="Buscar por placa ou fornecedor..."
+        style={{ marginBottom: "20px", maxWidth: "400px" }}
+      />
+      </div>
+
+    
 
       {/* Modal cadastro/edição */}
       <Modal
@@ -390,7 +395,7 @@ const ManutencoesList = () => {
             as="select"
             register={register}
             error={errors.placa?.message}
-            options={veiculos.map((v) => ({ value: v.placa, label: v.placa }))}
+            options={veiculos.map((v) => ({ value: v.placa, label: `${v.placa} - ${v.modelo}` }))}
           />
 
           <FormField
@@ -524,12 +529,7 @@ const ManutencoesList = () => {
         </form>
       </Modal>
 
-      <SearchInput
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar por placa ou fornecedor..."
-        style={{ marginBottom: "20px", maxWidth: "400px" }}
-      />
+     
 
       <div>
         {filtradas.map((m) => {

@@ -284,32 +284,57 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "20px auto",
+        maxWidth: "100%",
+        minheight: "100vh",
         padding: "20px 15px",
         backgroundColor: "#fff",
         borderRadius: "8px",
+        boxSizing: "border-box",
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Viagens</h2>
+      <div
+       style={{
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
+        }}>
+        <h2 style={{ marginBottom: "20px" }}>Viagens</h2>
 
-      {mostrarCadastrar && (
-        <button
-          onClick={abrirCadastro}
-          style={{
-            marginBottom: "20px",
-            padding: "12px 20px",
-            fontSize: "16px",
-            backgroundColor: "#3498db",
-            color: "#fff",
-            borderRadius: "6px",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Cadastrar Viagem
-        </button>
-      )}
+        {mostrarCadastrar && (
+          <button
+            onClick={abrirCadastro}
+            style={{
+              marginBottom: "20px",
+              padding: "12px 20px",
+              fontSize: "16px",
+              backgroundColor: "#3498db",
+              color: "#fff",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Cadastrar Viagem
+          </button>
+        )}
+         <SearchInput
+        type="text"
+        placeholder="Buscar viagens..."
+        value={busca}
+        onChange={(valor) => setBusca(valor)}
+        style={{
+          marginBottom: "20px",
+          padding: "8px",
+          width: "100%",
+          maxWidth: "400px",
+          borderRadius: "6px",
+          border: "1px solid #ccc",
+          boxSizing: "border-box",
+        }}
+      />
+      </div>
 
       <Modal
         isOpen={mostrarForm}
@@ -332,7 +357,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
             ))}
           </FormField>
 
-          {veiculoPrincipalSelecionado?.tipo === "Cavalo Mec." && (
+          {veiculoPrincipalSelecionado?.tipo === "Cavalo Mecânico" && (
             <FormField
               label="Carreta"
               name="carreta"
@@ -407,23 +432,15 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
         </Form>
       </Modal>
 
-      <SearchInput
-        type="text"
-        placeholder="Buscar viagens..."
-        value={busca}
-        onChange={(valor) => setBusca(valor)}
-        style={{
-          marginBottom: "20px",
-          padding: "8px",
-          width: "100%",
-          maxWidth: "400px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          boxSizing: "border-box",
-        }}
-      />
+     
 
-      <div>
+      <div  style={{
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "30px",
+        }}>
         {filtrados.map((v) => {
           const checklistsDaViagem = checklistsPorViagem[v.id] || [];
           console.log("Viagem:", v);
@@ -436,6 +453,7 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
           );
 
           return (
+      
             <ListItem
               key={v.id}
               title={`${v.placa} - ${v.carreta?.trim() || ""}- ${
@@ -489,9 +507,12 @@ const ViagensList = ({ mostrarCadastrar = true }) => {
                   disabled: temChecklistFim,
                 },
               ]}
+              style={{ marginBottom: "12px", width: "calc(30% - 10px)" }}
             />
+             
           );
         })}
+        
       </div>
 
       {confirmarId && (

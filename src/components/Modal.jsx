@@ -10,38 +10,33 @@ const styles = {
     backgroundColor: "rgba(0,0,0,0.5)",
     zIndex: 1000,
   },
-  containerMain: {
-    with:"100%"
-  },
   modalWrapper: {
     position: "fixed",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
     zIndex: 1001,
-    width: "80%", // largura responsiva no geral
-    maxWidth: "100%", // limite máximo de largura
-    minWidth: "320px", // limite mínimo para não ficar muito pequeno
-    maxHeight: "95vh",
-    minHeight: "450px", // um pouco maior pra não ficar pequeno demais
+    backgroundColor: "#fff",
+    overflowY: "auto",
     display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-    borderRadius: "8px",
-    gap:"20px"
-  
+    justifyContent: "center",
+    alignItems: "flex-start",
+    padding: "40px 20px",
+    boxSizing: "border-box",
   },
   modalContent: {
+    width: "100%",
+    maxWidth: "1000px",
+    height:"auto",
     backgroundColor: "#fff",
-    padding: "30px 20px 20px 20px",
+    padding: "30px",
     borderRadius: "8px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
     boxSizing: "border-box",
-    height: "auto", // para crescer conforme conteúdo
-    maxHeight: "100vh", // limitar para caber na tela
-    overflowY: "auto", // scroll interno se ultrapassar maxHeight
     position: "relative",
   },
+ 
   closeButton: {
     position: "absolute",
     top: "12px",
@@ -62,16 +57,15 @@ const styles = {
     paddingRight: "40px",
   },
   formLayout: {
-    display: "grid", // usa grid ao invés de flex
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "15px 20px", // espaçamento entre linhas e colunas
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", // Máximo 3 colunas
+    gap: "20px",
   },
   inputItem: {
-    flex: "1 1 45%",
-    minWidth: "200px",
     boxSizing: "border-box",
   },
 };
+
 
 export const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;

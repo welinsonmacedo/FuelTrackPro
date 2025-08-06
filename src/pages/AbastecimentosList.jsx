@@ -34,8 +34,7 @@ const AbastecimentosList = () => {
     editarAbastecimento,
     excluirAbastecimento,
   } = useAbastecimentos();
-const { veiculos, atualizarVeiculo } = useVeiculos();
-
+  const { veiculos, atualizarVeiculo } = useVeiculos();
 
   const { motoristas } = useMotoristas();
   const { fornecedores } = useFornecedores();
@@ -117,7 +116,14 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
     } else {
       clearErrors("km");
     }
-  }, [watchedPlaca, watchedKm, setError, clearErrors, ultimoKmPorVeiculo, editando]);
+  }, [
+    watchedPlaca,
+    watchedKm,
+    setError,
+    clearErrors,
+    ultimoKmPorVeiculo,
+    editando,
+  ]);
 
   // ⚠️ Valida tipo de combustível compatível com o veículo
   useEffect(() => {
@@ -160,33 +166,54 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
   const fecharModal = () => setMostrarForm(false);
 
   const onSubmit = async (dados) => {
-  const dadosFormatados = { ...dados, data: new Date(dados.data) };
+    const dadosFormatados = { ...dados, data: new Date(dados.data) };
 
-  if (editando) {
-    const dadosAntes = editando;
-    await editarAbastecimento(editando.id, dadosFormatados);
-    await log("colecaoAuditoria", "Editar abastecimento", "Atualizou dados do abastecimento", dadosAntes, dadosFormatados, "AbastecimentosList");
+    if (editando) {
+      const dadosAntes = editando;
+      await editarAbastecimento(editando.id, dadosFormatados);
+      await log(
+        "colecaoAuditoria",
+        "Editar abastecimento",
+        "Atualizou dados do abastecimento",
+        dadosAntes,
+        dadosFormatados,
+        "AbastecimentosList"
+      );
 
-    const veiculoAtual = veiculos.find((v) => v.placa === dadosFormatados.placa);
-    if (veiculoAtual) {
-      const kmAtualVeiculo = Number(veiculoAtual.kmAtual || 0);
-      if (dadosFormatados.km > kmAtualVeiculo) {
-        await atualizarVeiculo(veiculoAtual.id, { kmAtual: dadosFormatados.km });
+      const veiculoAtual = veiculos.find(
+        (v) => v.placa === dadosFormatados.placa
+      );
+      if (veiculoAtual) {
+        const kmAtualVeiculo = Number(veiculoAtual.kmAtual || 0);
+        if (dadosFormatados.km > kmAtualVeiculo) {
+          await atualizarVeiculo(veiculoAtual.id, {
+            kmAtual: dadosFormatados.km,
+          });
+        }
+      }
+    } else {
+      await adicionarAbastecimento(dadosFormatados);
+      await log(
+        "colecaoAuditoria",
+        "Criar abastecimento",
+        "Cadastro de novo abastecimento",
+        null,
+        dadosFormatados,
+        "AbastecimentosList"
+      );
+
+      const veiculoAtual = veiculos.find(
+        (v) => v.placa === dadosFormatados.placa
+      );
+      if (veiculoAtual) {
+        await atualizarVeiculo(veiculoAtual.id, {
+          kmAtual: dadosFormatados.km,
+        });
       }
     }
-  } else {
-    await adicionarAbastecimento(dadosFormatados);
-    await log("colecaoAuditoria", "Criar abastecimento", "Cadastro de novo abastecimento", null, dadosFormatados, "AbastecimentosList");
 
-    const veiculoAtual = veiculos.find((v) => v.placa === dadosFormatados.placa);
-    if (veiculoAtual) {
-      await atualizarVeiculo(veiculoAtual.id, { kmAtual: dadosFormatados.km });
-    }
-  }
-
-  fecharModal();
-};
-
+    fecharModal();
+  };
 
   const handleEdit = (item) => {
     setEditando(item);
@@ -197,21 +224,87 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
   const handleConfirmDelete = async () => {
     const dadosAntes = abastecimentos.find((a) => a.id === confirmarId);
     await excluirAbastecimento(confirmarId);
-    await log("colecaoAuditoria", "Excluir abastecimento", "Removeu abastecimento", dadosAntes, null, "AbastecimentosList");
+    await log(
+      "colecaoAuditoria",
+      "Excluir abastecimento",
+      "Removeu abastecimento",
+      dadosAntes,
+      null,
+      "AbastecimentosList"
+    );
     setConfirmarId(null);
   };
 
   return (
-    <div style={{ maxWidth: "900px", margin: "20px auto", padding: "20px 15px", backgroundColor: "#fff", borderRadius: "8px", boxSizing: "border-box" }}>
-      <h2 style={{ marginBottom: "20px" }}>Abastecimentos</h2>
+    <div
+      style={{
+        maxWidth: "100%",
+        height: "100vh",
+        padding: "20px 15px",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
+        }}
+      >
+        <h2 style={{ marginBottom: "20px" }}>Abastecimentos</h2>
 
-      <button onClick={abrirCadastro} style={{ marginBottom: "20px", padding: "12px 20px", fontSize: "16px", cursor: "pointer", borderRadius: "6px", border: "none", backgroundColor: "#4df55b", color: "#1e1f3b", fontWeight: "900", width: "100%", maxWidth: "400px", boxSizing: "border-box" }}>
-        Lançar Abastecimento
-      </button>
+        <button
+          onClick={abrirCadastro}
+          style={{
+            marginBottom: "20px",
+            padding: "12px 20px",
+            fontSize: "16px",
+            cursor: "pointer",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: "#4df55b",
+            color: "#000000",
+           
+            width: "100%",
+            maxWidth: "400px",
+            boxSizing: "border-box",
+          }}
+        >
+          Lançar Abastecimento
+        </button>
+        <SearchInput
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar abastecimentos..."
+          style={{
+            marginBottom: "20px",
+            padding: "8px",
+            width: "100%",
+            maxWidth: "400px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Abastecimento`}>
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Abastecimento`}
+      >
         <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormField label="Placa" name="placa" as="select" register={register} error={errors.placa}>
+          <FormField
+            label="Placa"
+            name="placa"
+            as="select"
+            register={register}
+            error={errors.placa}
+          >
             <option value="">Selecione a placa</option>
             {veiculos.map((v) => (
               <option key={v.id} value={v.placa}>
@@ -220,7 +313,13 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
             ))}
           </FormField>
 
-          <FormField label="Motorista" name="motorista" as="select" register={register} error={errors.motorista}>
+          <FormField
+            label="Motorista"
+            name="motorista"
+            as="select"
+            register={register}
+            error={errors.motorista}
+          >
             <option value="">Selecione o motorista</option>
             {motoristas.map((m) => (
               <option key={m.id} value={m.nome}>
@@ -229,7 +328,13 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
             ))}
           </FormField>
 
-          <FormField label="Fornecedor" name="fornecedor" as="select" register={register} error={errors.fornecedor}>
+          <FormField
+            label="Fornecedor"
+            name="fornecedor"
+            as="select"
+            register={register}
+            error={errors.fornecedor}
+          >
             <option value="">Selecione o fornecedor</option>
             {fornecedores.map((f) => (
               <option key={f.id} value={f.nome}>
@@ -238,7 +343,13 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
             ))}
           </FormField>
 
-          <FormField label="Tipo de Combustível" name="tipoCombustivel" as="select" register={register} error={errors.tipoCombustivel}>
+          <FormField
+            label="Tipo de Combustível"
+            name="tipoCombustivel"
+            as="select"
+            register={register}
+            error={errors.tipoCombustivel}
+          >
             <option value="">Selecione o tipo</option>
             <option value="Diesel S10">Diesel S10</option>
             <option value="Diesel Comum">Diesel Comum</option>
@@ -246,41 +357,81 @@ const { veiculos, atualizarVeiculo } = useVeiculos();
             <option value="Etanol">Etanol</option>
           </FormField>
 
-          <FormField label="KM" name="km" type="number" register={register} error={errors.km} />
-          <FormField label="Data" name="data" type="date" register={register} error={errors.data} />
-          <FormField label="Litros" name="litros" type="number" step="0.01" register={register} error={errors.litros} />
-          <FormField label="Valor do Litro" name="valorLitro" type="number" step="0.01" register={register} error={errors.valorLitro} />
+          <FormField
+            label="KM"
+            name="km"
+            type="number"
+            register={register}
+            error={errors.km}
+          />
+          <FormField
+            label="Data"
+            name="data"
+            type="date"
+            register={register}
+            error={errors.data}
+          />
+          <FormField
+            label="Litros"
+            name="litros"
+            type="number"
+            step="0.01"
+            register={register}
+            error={errors.litros}
+          />
+          <FormField
+            label="Valor do Litro"
+            name="valorLitro"
+            type="number"
+            step="0.01"
+            register={register}
+            error={errors.valorLitro}
+          />
 
           <div style={{ width: "100%" }}>
-            <SubmitButton loading={isSubmitting}>{editando ? "Atualizar" : "Cadastrar"}</SubmitButton>
+            <SubmitButton loading={isSubmitting}>
+              {editando ? "Atualizar" : "Cadastrar"}
+            </SubmitButton>
           </div>
         </Form>
       </Modal>
 
-      <SearchInput value={busca} onChange={setBusca} placeholder="Buscar abastecimentos..." style={{ marginBottom: "20px", padding: "8px", width: "100%", maxWidth: "400px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} />
-
-      <div style={{ width: "100%", maxWidth: "900px" }}>
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "30px",
+        }}
+      >
         {filtrados.map((a) => (
           <ListItem
             key={a.id}
             title={`${a.placa} - ${a.motorista || "-"}`}
-            subtitle={`KM: ${a.km} | Data: ${formatData(a.data)} | Litros: ${a.litros} | Tipo: ${a.tipoCombustivel || "-"} | Valor litro: R$ ${a.valorLitro.toFixed(2)} | Total: R$ ${(a.valorLitro * a.litros).toFixed(2)}`}
+            subtitle={`KM: ${a.km} | Data: ${formatData(a.data)} | Litros: ${
+              a.litros
+            } | Tipo: ${
+              a.tipoCombustivel || "-"
+            } | Valor litro: R$ ${a.valorLitro.toFixed(2)} | Total: R$ ${(
+              a.valorLitro * a.litros
+            ).toFixed(2)}`}
             onEdit={() => handleEdit(a)}
             onDelete={() => setConfirmarId(a.id)}
-            style={{ marginBottom: "12px" }}
+            style={{ marginBottom: "12px", width: "calc(30% - 10px)" }}
           />
         ))}
       </div>
 
-   {confirmarId !== null && (
- <ConfirmDialog
-  isOpen={confirmarId !== null}
-  title="Excluir abastecimento"
-  message="Tem certeza que deseja excluir este abastecimento?"
-  onConfirm={handleConfirmDelete}
-  onCancel={() => setConfirmarId(null)}
-/>
-)}
+      {confirmarId !== null && (
+        <ConfirmDialog
+          isOpen={confirmarId !== null}
+          title="Excluir abastecimento"
+          message="Tem certeza que deseja excluir este abastecimento?"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmarId(null)}
+        />
+      )}
     </div>
   );
 };

@@ -60,8 +60,6 @@ const KmAtualPage = () => {
     fetchKmAtual();
   }, []);
 
-  if (loading) return <p>Carregando KM atual dos veículos...</p>;
-
   const dadosFiltrados = [...dados].filter((item) => {
     const termo = searchTerm.toLowerCase();
     return (
@@ -71,75 +69,116 @@ const KmAtualPage = () => {
     );
   });
 
+  if (loading) return <p style={{ textAlign: "center" }}>Carregando KM atual dos veículos...</p>;
+
   return (
-    <div
-      style={{
-        maxWidth: "900px",
-        margin: "20px auto",
-        padding: "20px",
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-      }}
-    >
-      <h2 style={{ marginBottom: "20px" }}>KM Atual </h2>
+    <div style={styles.wrapper}>
+      <div  style={{
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
+        }}>
+<h2 style={styles.title}>Odômetro Atual dos Veículos</h2>
       <input
         type="text"
-        placeholder="Buscar por placa, modelo ou marca..."
+        placeholder="🔍 Buscar por placa, modelo ou marca..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        style={{
-          marginBottom: "15px",
-          padding: "8px",
-          width: "100%",
-          borderRadius: "4px",
-          border: "1px solid #ccc",
-        }}
+        style={styles.input}
       />
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f0f0f0" }}>
-            <th style={thStyle}>Placa</th>
-            <th style={thStyle}>Ano</th>
-            <th style={thStyle}>Marca</th>
-            <th style={thStyle}>Modelo</th>
-            <th style={thStyle}>KM Atual</th>
-            <th style={thStyle}>Última Atualização</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dadosFiltrados
-            .sort((a, b) => a.modelo.localeCompare(b.modelo))
-            .map((item, index) => (
-              <tr key={index}>
-                <td style={tdStyle}>{item.placa}</td>
-                <td style={tdStyle}>{item.ano}</td>
-                <td style={tdStyle}>{item.marca}</td>
-                <td style={tdStyle}>{item.modelo}</td>
-                <td style={tdStyle}>
-                  {item.kmAtual !== null ? item.kmAtual : "Sem registro"}
-                </td>
-                <td style={tdStyle}>
-                  {item.dataAbastecimento
-                    ? item.dataAbastecimento.toLocaleDateString()
-                    : "Sem registro"}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      </div>
+      
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Placa</th>
+              <th style={styles.th}>Ano</th>
+              <th style={styles.th}>Marca</th>
+              <th style={styles.th}>Modelo</th>
+              <th style={styles.th}>KM Atual</th>
+              <th style={styles.th}>Última Atualização</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dadosFiltrados
+              .sort((a, b) => a.modelo.localeCompare(b.modelo))
+              .map((item, index) => (
+                <tr key={index} style={styles.trHover}>
+                  <td style={styles.td}>{item.placa}</td>
+                  <td style={styles.td}>{item.ano}</td>
+                  <td style={styles.td}>{item.marca}</td>
+                  <td style={styles.td}>{item.modelo}</td>
+                  <td style={styles.td}>
+                    {item.kmAtual !== null ? item.kmAtual : "Sem registro"}
+                  </td>
+                  <td style={styles.td}>
+                    {item.dataAbastecimento
+                      ? item.dataAbastecimento.toLocaleDateString()
+                      : "Sem registro"}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-const thStyle = {
-  padding: "10px",
-  textAlign: "left",
-  borderBottom: "1px solid #ccc",
-};
-
-const tdStyle = {
-  padding: "10px",
-  borderBottom: "1px solid #eee",
+const styles = {
+  wrapper: {
+    maxWidth: "100%",
+    padding: "30px",
+    backgroundColor: "#ffffff",
+    borderRadius: "16px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  },
+  title: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "20px",
+    color: "#111827",
+    textAlign: "start",
+  },
+  input: {
+    marginBottom: "20px",
+    padding: "12px 16px",
+    width: "100%",
+    fontSize: "16px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    outline: "none",
+    transition: "border 0.2s ease-in-out",
+  },
+  tableWrapper: {
+    overflowX: "auto",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    borderRadius: "8px",
+    overflow: "hidden",
+  },
+  th: {
+    padding: "14px",
+    backgroundColor: "#e5e7eb",
+    textAlign: "left",
+    fontWeight: "600",
+    color: "#374151",
+    borderBottom: "2px solid #d1d5db",
+  },
+  td: {
+    padding: "12px",
+    borderBottom: "1px solid #e5e7eb",
+    color: "#4b5563",
+  },
+  trHover: {
+    transition: "background 0.2s",
+  },
 };
 
 export default KmAtualPage;

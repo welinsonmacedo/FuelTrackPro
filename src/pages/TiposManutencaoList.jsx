@@ -12,7 +12,8 @@ import { Modal } from "../components/Modal";
 import { Form } from "../components/Form";
 
 const TiposManutencaoList = () => {
-  const { tipos, adicionarTipo, editarTipo, excluirTipo } = useTiposManutencao();
+  const { tipos, adicionarTipo, editarTipo, excluirTipo } =
+    useTiposManutencao();
   const { log } = useAuditoria();
 
   const [editando, setEditando] = useState(null);
@@ -93,37 +94,73 @@ const TiposManutencaoList = () => {
   };
 
   return (
-    <div style={{ maxWidth: "900px", margin: "20px auto", padding: "20px", background: "#fff", borderRadius: "8px" }}>
-      <h2>Tipos de Manutenção</h2>
-
-      <button
-        onClick={abrirCadastro}
+    <div
+      style={{
+        maxWidth: "100%",
+        padding: "20px",
+        background: "#fff",
+        borderRadius: "8px",
+      }}
+    >
+      <div
         style={{
-          margin: "20px 0",
-          padding: "12px 20px",
-          background: "#3498db",
-          color: "#fff",
-          borderRadius: "6px",
-          border: "none",
-          fontSize: "16px",
-          cursor: "pointer",
-          width: "100%",
-          maxWidth: "400px",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+          paddingBottom: 10,
         }}
       >
-        Cadastrar Tipo de Manutenção
-      </button>
+        <h2>Tipos de Manutenção</h2>
 
-      <Modal isOpen={mostrarForm} onClose={fecharModal} title={`${tituloForm} Tipo de Manutenção`}>
-        <Form onSubmit={handleSubmit(onSubmit)} style={{ padding: 0, border: "none" }}>
+        <button
+          onClick={abrirCadastro}
+          style={{
+            margin: "20px 0",
+            padding: "12px 20px",
+            background: "#6ca38e",
+            color: "#fff",
+            borderRadius: "6px",
+            border: "none",
+            fontSize: "16px",
+            cursor: "pointer",
+            width: "100%",
+            maxWidth: "400px",
+          }}
+        >
+          Cadastrar Tipo de Manutenção
+        </button>
+      </div>
+
+      <Modal
+        isOpen={mostrarForm}
+        onClose={fecharModal}
+        title={`${tituloForm} Tipo de Manutenção`}
+      >
+        <Form
+          onSubmit={handleSubmit(onSubmit)}
+          style={{ padding: 0, border: "none" }}
+        >
           {[
             { name: "nome", label: "Nome da Manutenção" },
             { name: "marca", label: "Marca do Veículo" },
             { name: "modelo", label: "Modelo do Veículo" },
-            { name: "tempoDias", label: "Frequência (em dias)", type: "number" },
+            {
+              name: "tempoDias",
+              label: "Frequência (em dias)",
+              type: "number",
+            },
             { name: "tempoKm", label: "Frequência (em km)", type: "number" },
-            { name: "avisoDiasAntes", label: "Avisar quantos dias antes", type: "number" },
-            { name: "avisoKmAntes", label: "Avisar quantos km antes", type: "number" },
+            {
+              name: "avisoDiasAntes",
+              label: "Avisar quantos dias antes",
+              type: "number",
+            },
+            {
+              name: "avisoKmAntes",
+              label: "Avisar quantos km antes",
+              type: "number",
+            },
           ].map((field) => (
             <FormField
               key={field.name}
@@ -151,17 +188,26 @@ const TiposManutencaoList = () => {
         </Form>
       </Modal>
 
-      {tipos.map((tipo) => (
-        <ListItem
-          key={tipo.id}
-          title={tipo.nome}
-          subtitle={`Marca: ${tipo.marca} | Modelo: ${tipo.modelo} | Dias: ${tipo.tempoDias} | Km: ${tipo.tempoKm}`}
-          onEdit={() => handleEdit(tipo)}
-          onDelete={() => setConfirmarId(tipo.id)}
-          style={{ marginBottom: "12px" }}
-        />
-      ))}
-
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "30px",
+        }}
+      >
+        {tipos.map((tipo) => (
+          <ListItem
+            key={tipo.id}
+            title={tipo.nome}
+            subtitle={`Marca: ${tipo.marca} | Modelo: ${tipo.modelo} | Dias: ${tipo.tempoDias} | Km: ${tipo.tempoKm}`}
+            onEdit={() => handleEdit(tipo)}
+            onDelete={() => setConfirmarId(tipo.id)}
+            style={{ marginBottom: "12px", width: "calc(30% - 10px)" }}
+          />
+        ))}
+      </div>
       {confirmarId && (
         <ConfirmDialog
           title="Excluir tipo de manutenção"
