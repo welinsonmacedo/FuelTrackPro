@@ -1,12 +1,25 @@
-# React + Vite
+FuelTrack Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema web para controle e gestão de abastecimentos, manutenção e frotas.
 
-Currently, two official plugins are available:
+📌 Visão Geral
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+FuelTrack Pro é uma aplicação React moderna para gerenciar veículos, abastecimentos, consumo de combustível, checklists e ordens de serviço. Criada com foco em performance e usabilidade para frotistas e postos.
 
-## Expanding the ESLint configuration
+⚙️ Principais funcionalidades
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Cadastro e consulta de veículos (placa, modelo, ano, motorista)
+
+Registro de abastecimentos com integração de notas fiscais
+
+Controle de consumo por km/l e relatórios por período
+
+Checklists de inspeção e ordens de serviço (OS)
+
+Gestão de fornecedores e postos
+
+Auditoria e histórico de alterações
+
+Upload de imagens (comprovantes, fotos de avarias)
+
+Autenticação e controle por empresa/usuário
