@@ -1,25 +1,29 @@
-FuelTrack Pro
+# ⛽ FuelTrack
 
-Sistema web para controle e gestão de abastecimentos, manutenção e frotas.
+O **FuelTrack** é uma aplicação para gerenciamento e acompanhamento de abastecimentos e consumo de combustível de veículos.  
+Ele auxilia motoristas, empresas de frotas e gestores de transporte a monitorar gastos, calcular eficiência de consumo e gerar relatórios de desempenho.
 
-📌 Visão Geral
+---
 
-FuelTrack Pro é uma aplicação React moderna para gerenciar veículos, abastecimentos, consumo de combustível, checklists e ordens de serviço. Criada com foco em performance e usabilidade para frotistas e postos.
+## 🚀 Funcionalidades
 
-⚙️ Principais funcionalidades
+- Registro de abastecimentos (data, valor, volume, posto, etc.)
+- Cálculo automático de consumo médio (km/l)
+- Controle de custos de combustível
+- Dashboard com gráficos e estatísticas
+- Exportação de dados para **Excel/CSV**
+- Multiusuário (opcional)
+- Integração com planilhas Google Sheets (opcional)
 
-Cadastro e consulta de veículos (placa, modelo, ano, motorista)
+---
 
-Registro de abastecimentos com integração de notas fiscais
+## 🛠️ Tecnologias Utilizadas
 
-Controle de consumo por km/l e relatórios por período
+- **Frontend:** HTML, CSS, JavaScript  
+- **Backend:** Node.js / Firebase (ou outro backend configurado)  
+- **Banco de Dados:** Firebase / Firestore ou Google Sheets  
+- **Gráficos:** Chart.js  
 
-Checklists de inspeção e ordens de serviço (OS)
+---
 
-Gestão de fornecedores e postos
 
-Auditoria e histórico de alterações
-
-Upload de imagens (comprovantes, fotos de avarias)
-
-Autenticação e controle por empresa/usuário
