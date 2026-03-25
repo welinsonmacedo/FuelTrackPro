@@ -58,7 +58,7 @@ const Home = ({ usuario }) => {
     
 
       <section style={{ marginTop: 30 }}>
-        <h2>Resumo Rápido</h2>
+        <h2>Resumo Rápido 2026</h2>
         <div style={{ display: "flex", gap: 20, marginTop: 10 }}>
           <Card
             title="Consumo Médio"
